@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRediT Profiler</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500&family=Noto+Sans+Arabic:wght@400;500&family=Noto+Sans:wght@400;500&display=swap');
+:root{
+  --bg:#faf9f7;--bg2:#f3f1ed;--bg3:#eae7e1;--sf:#fff;
+  --ink:#1a1916;--ink2:#4a4844;--ink3:#8a8782;
+  --bd:rgba(26,25,22,.1);--bd2:rgba(26,25,22,.18);
+  --ac:#3d3580;--ac-bg:#eeedfe;--ac-t:#3d3580;
+  --co:#5c3d99;--co-bg:#f0ebff;--co-t:#4a2d8a;
+  --f1-bg:#e8f4f0;--f1-t:#1a5c47;
+  --la-bg:#fef3e8;--la-t:#7a4010;
+  --mi-bg:#f0eeea;--mi-t:#5a5652;
+  --er:#c0392b;--er-bg:#fdf0ef;
+  --wn-bg:#fef9e7;--wn-t:#7a5c00;--wn-bd:#e6c235;
+  --wg:#1a7a4a;--wg-bg:#eaf6ef;
+  --wb:#185fa5;--wb-bg:#e6f1fb;
+  --wa:#7a5c00;--wa-bg:#fef9e7;
+  --wo:#7a3a00;--wo-bg:#fff3e8;
+  --wr:#c0392b;--wr-bg:#fdf0ef;
+  --r:10px;--rsm:6px;--sh:0 1px 3px rgba(0,0,0,.06);
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#141412;--bg2:#1e1d1a;--bg3:#262420;--sf:#1e1d1a;
+  --ink:#f0ede8;--ink2:#b0ada8;--ink3:#6a6762;
+  --bd:rgba(240,237,232,.1);--bd2:rgba(240,237,232,.18);
+  --ac:#9990e8;--ac-bg:#26215c;--ac-t:#c8c4f8;
+  --co:#b89af8;--co-bg:#26205a;--co-t:#c8baf8;
+  --f1-bg:#0a2e22;--f1-t:#5dcaa5;
+  --la-bg:#2e1a08;--la-t:#ef9f27;
+  --mi-bg:#242220;--mi-t:#88857f;
+  --er:#e05a4e;--er-bg:#2e1210;
+  --wn-bg:#2e2500;--wn-t:#e6c235;--wn-bd:#7a6010;
+  --wg:#5dcaa5;--wg-bg:#0a2e22;
+  --wb:#85b7eb;--wb-bg:#042c53;
+  --wa:#fac775;--wa-bg:#2e2500;
+  --wo:#f0997b;--wo-bg:#2e1200;
+  --wr:#e05a4e;--wr-bg:#2e1210;
+}}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:15px;}
+body{background:var(--bg);color:var(--ink);font-family:'DM Sans',system-ui,sans-serif;line-height:1.6;min-height:100vh;}
+.lzh{font-family:'Noto Sans SC',system-ui,sans-serif;}
+.lar{font-family:'Noto Sans Arabic',system-ui,sans-serif;}
+.lpt,.lfr{font-family:'Noto Sans',system-ui,sans-serif;}
+.wrap{max-width:980px;margin:0 auto;padding:0 20px 80px;}
+
+header{padding:26px 0 20px;border-bottom:0.5px solid var(--bd2);margin-bottom:24px;display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+.brand-name{font-family:'DM Serif Display',Georgia,serif;font-size:28px;font-weight:400;color:var(--ink);line-height:1.1;}
+.brand-name em{font-style:italic;color:var(--ac);}
+.brand-sub{font-size:12px;color:var(--ink3);margin-top:2px;}
+.langs{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;}
+.lb{padding:3px 10px;font-size:11px;font-weight:500;border:0.5px solid var(--bd2);border-radius:20px;background:transparent;color:var(--ink2);cursor:pointer;font-family:inherit;transition:all .15s;}
+.lb:hover{background:var(--bg2);}
+.lb.on{background:var(--ac-bg);color:var(--ac-t);border-color:var(--ac);}
+
+.tabs{display:flex;border-bottom:0.5px solid var(--bd2);margin-bottom:24px;overflow-x:auto;}
+.tab{padding:8px 16px;font-size:13px;font-weight:500;color:var(--ink3);cursor:pointer;border:none;border-bottom:2px solid transparent;margin-bottom:-0.5px;background:none;font-family:inherit;transition:color .15s;white-space:nowrap;flex-shrink:0;}
+.tab:hover{color:var(--ink);}
+.tab.on{color:var(--ink);border-bottom-color:var(--ink);}
+
+.slbl{font-size:10px;font-weight:500;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;}
+.panel{background:var(--sf);border:0.5px solid var(--bd);border-radius:var(--r);padding:14px 18px;margin-bottom:14px;}
+.ph{display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;}
+.ph-l{display:flex;align-items:center;gap:8px;}
+.pc{font-size:10px;color:var(--ink3);transition:transform .2s;display:inline-block;}
+.pb{max-height:0;overflow:hidden;transition:max-height .3s ease;}
+.pb.open{max-height:1400px;}
+
+/* ABOUT */
+.about-box{background:var(--bg2);border-radius:var(--rsm);padding:16px 18px;margin-bottom:24px;line-height:1.75;}
+.about-box h2{font-family:'DM Serif Display',serif;font-size:18px;font-weight:400;color:var(--ink);margin-bottom:8px;}
+.about-box p{font-size:13px;color:var(--ink2);margin-bottom:10px;}
+.about-box p:last-child{margin-bottom:0;}
+.about-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+.atag{padding:3px 10px;background:var(--ac-bg);color:var(--ac-t);border-radius:20px;font-size:11px;font-weight:500;}
+.explore-divider{font-size:11px;font-weight:500;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;padding-bottom:10px;border-bottom:0.5px solid var(--bd2);}
+
+/* EXPLORE */
+.sw{position:relative;margin-bottom:12px;}
+.sw input{width:100%;padding:9px 12px 9px 34px;font-size:13px;border:0.5px solid var(--bd2);border-radius:var(--r);background:var(--bg2);color:var(--ink);font-family:inherit;outline:none;}
+.sw input:focus{border-color:var(--ac);}
+.si{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--ink3);font-size:14px;pointer-events:none;}
+.fr{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+.chip{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:500;border:0.5px solid var(--bd2);background:transparent;color:var(--ink2);cursor:pointer;font-family:inherit;transition:all .12s;}
+.chip:hover{background:var(--bg2);}
+.chip.on{background:var(--ac-bg);color:var(--ac-t);border-color:var(--ac);}
+.rgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:8px;}
+.rc{background:var(--sf);border:0.5px solid var(--bd);border-radius:var(--r);padding:13px 15px;cursor:pointer;transition:all .15s;}
+.rc:hover{border-color:var(--bd2);background:var(--bg2);transform:translateY(-1px);}
+.rc.sel{border-color:var(--ac);background:var(--ac-bg);}
+.rc.mand{border-left:3px solid var(--er);}
+.rcn2{font-size:10px;color:var(--ink3);font-family:'DM Mono',monospace;margin-bottom:5px;}
+.rcn{font-size:13px;font-weight:500;color:var(--ink);margin-bottom:7px;line-height:1.3;}
+.rc.sel .rcn{color:var(--ac-t);}
+.cpill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:500;}
+.mpill{display:inline-block;padding:1px 6px;border-radius:20px;font-size:10px;font-weight:500;background:var(--er-bg);color:var(--er);margin-left:4px;}
+.dbox{border:0.5px solid var(--bd2);border-radius:var(--r);padding:18px 20px;margin-bottom:14px;background:var(--sf);}
+.dbox.h{display:none;}
+.dbt{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+.dbtitle{font-size:15px;font-weight:500;color:var(--ink);}
+.dbc{background:none;border:none;cursor:pointer;font-size:16px;color:var(--ink3);font-family:inherit;}
+.dbdef{font-size:13px;color:var(--ink2);line-height:1.7;margin-bottom:12px;padding-bottom:12px;border-bottom:0.5px solid var(--bd);}
+.dbex{font-size:11px;font-weight:500;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:7px;}
+.expills{display:flex;flex-wrap:wrap;gap:5px;}
+.ep{padding:3px 10px;background:var(--bg2);border:0.5px solid var(--bd);border-radius:20px;font-size:12px;color:var(--ink2);}
+
+/* BUTTONS */
+.btn{padding:7px 16px;font-size:12px;font-weight:500;border-radius:var(--rsm);cursor:pointer;font-family:inherit;transition:all .12s;}
+.bto{background:var(--sf);border:0.5px solid var(--bd2);color:var(--ink);}
+.bto:hover{background:var(--bg2);}
+.btp{background:var(--ink);border:none;color:var(--bg);}
+.btp:hover{opacity:.85;}
+.btg{background:transparent;border:0.5px solid var(--bd);color:var(--ink2);}
+.btg:hover{background:var(--bg2);}
+.bsm{padding:5px 12px;font-size:11px;}
+.ior{display:flex;gap:8px;flex-wrap:wrap;}
+.bico{background:none;border:none;cursor:pointer;font-size:13px;color:var(--ink3);padding:3px 6px;border-radius:4px;font-family:inherit;line-height:1;}
+.bico:hover{color:var(--er);background:var(--er-bg);}
+.bico.ed:hover{color:var(--ac);background:var(--ac-bg);}
+
+/* ADD AUTHOR — primary action hero */
+.add-hero{background:var(--sf);border:0.5px solid var(--bd2);border-radius:var(--r);padding:20px;margin-bottom:20px;}
+.add-hero-label{font-size:13px;font-weight:500;color:var(--ink);margin-bottom:10px;}
+.add-hero-sub{font-size:12px;color:var(--ink3);margin-bottom:12px;}
+.add-row{display:flex;gap:8px;}
+.add-row input{flex:1;padding:10px 14px;font-size:14px;border:1.5px solid var(--ac);border-radius:var(--r);background:var(--bg);color:var(--ink);font-family:inherit;outline:none;}
+.add-row input:focus{border-color:var(--co);box-shadow:0 0 0 3px var(--ac-bg);}
+.add-row .btn-hero{padding:10px 22px;font-size:14px;font-weight:500;background:var(--ac);border:none;color:#fff;border-radius:var(--r);cursor:pointer;font-family:inherit;transition:all .12s;white-space:nowrap;}
+.add-row .btn-hero:hover{background:var(--co);}
+
+/* ARTICLE */
+.agrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;}
+@media(max-width:540px){.agrid{grid-template-columns:1fr;}}
+.ff label{display:block;font-size:10px;font-weight:500;color:var(--ink3);margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em;}
+.ff input{width:100%;padding:7px 10px;font-size:13px;border:0.5px solid var(--bd2);border-radius:var(--rsm);background:var(--bg2);color:var(--ink);font-family:inherit;outline:none;}
+.ff input:focus{border-color:var(--ac);}
+.ff.full{grid-column:1/-1;}
+
+/* WEIGHTS */
+.wgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px;margin-top:12px;}
+.wr2{display:flex;align-items:center;gap:8px;}
+.wn{font-size:12px;color:var(--ink2);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.wn.fx{color:var(--er);font-weight:500;}
+.wfb{font-size:12px;font-weight:500;font-family:'DM Mono',monospace;padding:2px 10px;border-radius:20px;background:var(--wg-bg);color:var(--wg);border:0.5px solid var(--wg);}
+.wsl{flex:0 0 90px;height:4px;border-radius:2px;outline:none;cursor:pointer;-webkit-appearance:none;appearance:none;border:none;}
+.wv{font-size:12px;font-weight:500;font-family:'DM Mono',monospace;min-width:20px;text-align:right;}
+
+/* AUTHORS */
+.astack{display:flex;flex-direction:column;gap:10px;margin-bottom:18px;}
+.ab{border:0.5px solid var(--bd);border-radius:var(--r);overflow:hidden;background:var(--sf);transition:border-color .2s;}
+.ab.ico{border-color:var(--co);}
+.ab.err{border-color:var(--er);}
+.ab.dov{border:1.5px dashed var(--ac);}
+.abh{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--bg2);border-bottom:0.5px solid var(--bd);gap:8px;flex-wrap:wrap;}
+.abm{display:flex;align-items:center;gap:8px;flex:1;flex-wrap:wrap;}
+.av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0;background:var(--bg3);color:var(--ink2);}
+.av.co{background:var(--co-bg);color:var(--co-t);}
+.abn{font-size:13px;font-weight:500;color:var(--ink);}
+.abne{font-size:13px;font-weight:500;color:var(--ink);border:0.5px solid var(--ac);border-radius:4px;padding:2px 7px;background:var(--bg2);font-family:inherit;outline:none;width:160px;}
+.abct{font-size:11px;color:var(--ink3);}
+.bdg{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:500;padding:2px 8px;border-radius:20px;white-space:nowrap;}
+.bf1{background:var(--f1-bg);color:var(--f1-t);}
+.bla{background:var(--la-bg);color:var(--la-t);}
+.bmi{background:var(--mi-bg);color:var(--mi-t);}
+.bco{background:var(--co-bg);color:var(--co-t);border:1px solid var(--co);}
+.ber{background:var(--er-bg);color:var(--er);}
+.bwn{background:var(--wn-bg);color:var(--wn-t);}
+.dh{cursor:grab;font-size:14px;color:var(--ink3);padding:2px 4px;}
+.abc{display:flex;align-items:center;gap:14px;padding:8px 14px;border-bottom:0.5px solid var(--bd);flex-wrap:wrap;}
+.cg{display:flex;align-items:center;gap:6px;}
+.cl2{font-size:12px;color:var(--ink2);white-space:nowrap;}
+.cs{font-size:12px;padding:4px 8px;border:0.5px solid var(--bd2);border-radius:var(--rsm);background:var(--bg2);color:var(--ink);font-family:inherit;outline:none;cursor:pointer;}
+.crl{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:var(--ink2);user-select:none;}
+.crl input{accent-color:var(--co);width:14px;height:14px;cursor:pointer;}
+.rgsm{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:5px;padding:12px 14px;}
+.rtw{position:relative;}
+.rt{display:flex;align-items:center;gap:7px;padding:6px 9px;border-radius:var(--rsm);border:0.5px solid var(--bd);cursor:pointer;background:transparent;font-family:inherit;text-align:left;transition:all .12s;width:100%;}
+.rt:hover{background:var(--bg2);border-color:var(--bd2);}
+.rt.on{background:var(--f1-bg);border-color:var(--f1-t);}
+.rt.mr{border-left:2.5px solid var(--er);}
+.rtb{width:14px;height:14px;flex-shrink:0;border:1.5px solid var(--bd2);border-radius:3px;display:flex;align-items:center;justify-content:center;}
+.rt.on .rtb{background:var(--f1-t);border-color:var(--f1-t);}
+.rttk{color:#fff;font-size:9px;display:none;}
+.rt.on .rttk{display:block;}
+.rtl{font-size:12px;color:var(--ink2);line-height:1.3;}
+.rt.on .rtl{color:var(--f1-t);font-weight:500;}
+.rtt{display:none;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:7px 10px;border-radius:8px;font-size:11px;line-height:1.5;pointer-events:none;z-index:50;max-width:230px;white-space:normal;text-align:left;min-width:140px;}
+.rtt::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:var(--ink);}
+.rtw:hover .rtt{display:block;}
+
+/* MESSAGES */
+.vmsg{padding:10px 14px;background:var(--er-bg);border:0.5px solid var(--er);border-radius:var(--rsm);font-size:12px;color:var(--er);margin-bottom:12px;display:none;}
+.vmsg.show{display:block;}
+.wmsg{padding:8px 14px;background:var(--wn-bg);border:0.5px solid var(--wn-bd);border-radius:var(--rsm);font-size:12px;color:var(--wn-t);margin-bottom:12px;display:none;}
+.wmsg.show{display:block;}
+.calerts{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+.ca{display:flex;align-items:flex-start;gap:8px;padding:8px 12px;border-radius:var(--rsm);font-size:12px;line-height:1.5;}
+.caw{background:var(--wn-bg);border:0.5px solid var(--wn-bd);color:var(--wn-t);}
+.cai{background:var(--wb-bg);border:0.5px solid var(--wb);color:var(--wb);}
+.brow{display:flex;justify-content:flex-end;gap:8px;}
+.es{text-align:center;padding:2rem 1rem;color:var(--ink3);font-size:13px;line-height:1.8;}
+
+/* HISTORY */
+.hlist{display:flex;flex-direction:column;gap:6px;margin-top:12px;}
+.hi{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border:0.5px solid var(--bd);border-radius:var(--rsm);font-size:12px;background:var(--sf);}
+.him{color:var(--ink2);font-weight:500;}
+.hid{font-size:11px;color:var(--ink3);margin-top:2px;}
+.hia{display:flex;gap:5px;}
+
+/* RESULTS */
+.rw{margin-top:28px;}
+.rs{margin-bottom:26px;}
+.rh{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(125px,1fr));gap:10px;}
+.mc{background:var(--bg2);border-radius:var(--rsm);padding:12px 14px;}
+.mc.ico{outline:1.5px solid var(--co);outline-offset:-1px;}
+.mcl{font-size:11px;color:var(--ink3);margin-bottom:3px;line-height:1.3;}
+.mcv{font-size:22px;font-weight:300;color:var(--ink);line-height:1;font-family:'DM Serif Display',serif;}
+.mcs{font-size:11px;color:var(--ink3);margin-top:3px;}
+.mct{display:flex;flex-wrap:wrap;gap:3px;margin-top:5px;}
+
+/* SCORES — no % */
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;}
+.sc{background:var(--bg2);border-radius:var(--rsm);padding:14px 16px;}
+.sc.top{outline:1.5px solid var(--ac);outline-offset:-1px;}
+.scr{font-size:10px;font-weight:500;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px;}
+.scn{font-size:14px;font-weight:500;color:var(--ink);margin-bottom:2px;}
+.scv{font-size:28px;font-weight:300;color:var(--ink);font-family:'DM Serif Display',serif;line-height:1;}
+.scbw{margin-top:8px;}
+.scbt{width:100%;height:4px;background:var(--bd2);border-radius:2px;overflow:hidden;}
+.scbf{height:100%;border-radius:2px;}
+
+/* MATRIX */
+.catleg{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
+.li{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--ink2);}
+.lsw{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
+.srow{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.sbt{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500;border:0.5px solid var(--bd2);background:transparent;color:var(--ink2);cursor:pointer;font-family:inherit;transition:all .12s;}
+.sbt.on{background:var(--bg3);color:var(--ink);}
+.mwrap{overflow-x:auto;}
+.mtbl{border-collapse:collapse;}
+.mtbl th,.mtbl td{border:0.5px solid var(--bd);vertical-align:middle;}
+.mtbl thead th{font-size:11px;font-weight:500;color:var(--ink2);padding:5px 3px;background:var(--bg2);writing-mode:vertical-rl;transform:rotate(180deg);height:108px;white-space:nowrap;text-align:center;}
+.mtbl thead th.mth{color:var(--er);}
+.mtbl thead th.ca{writing-mode:horizontal-tb;transform:none;height:auto;text-align:left;padding:8px 12px;font-size:10px;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em;min-width:185px;}
+.mtbl thead th.csm{writing-mode:horizontal-tb;transform:none;height:auto;padding:8px 10px;font-size:10px;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em;text-align:left;min-width:80px;}
+.tda{text-align:left;padding:8px 12px;background:var(--bg2);white-space:nowrap;min-width:185px;}
+.tda.cor{background:var(--co-bg);}
+.tdai{display:flex;align-items:center;gap:8px;}
+.tdav{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;flex-shrink:0;background:var(--bg3);color:var(--ink2);}
+.tdav.co{background:var(--co-bg);color:var(--co-t);}
+.tdn{font-size:12px;font-weight:500;color:var(--ink);}
+.tdp{font-size:10px;font-weight:500;padding:1px 6px;border-radius:20px;display:inline-block;margin-top:2px;}
+.tdr{width:32px;min-width:32px;max-width:32px;height:32px;padding:0;}
+.con{width:100%;height:100%;display:flex;align-items:center;justify-content:center;position:relative;}
+.con:hover .tip{display:block;}
+.tip{display:none;position:absolute;bottom:110%;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:4px 8px;border-radius:4px;font-size:10px;white-space:nowrap;pointer-events:none;z-index:10;}
+.coff{width:100%;height:100%;}
+.tdsm{padding:6px 10px;background:var(--bg2);min-width:80px;}
+.ci{display:flex;align-items:center;gap:8px;}
+.cn{font-size:12px;font-weight:500;color:var(--ink);min-width:18px;}
+.bt{flex:1;height:5px;background:var(--bd2);border-radius:3px;overflow:hidden;}
+.bf{height:100%;border-radius:3px;}
+
+/* CHARTS */
+.mtog{display:flex;background:var(--bg2);border:0.5px solid var(--bd2);border-radius:20px;padding:3px;gap:2px;margin-bottom:12px;width:fit-content;}
+.mtb{padding:4px 14px;border:none;border-radius:20px;background:transparent;font-size:12px;font-weight:500;cursor:pointer;color:var(--ink2);font-family:inherit;transition:all .12s;}
+.mtb.on{background:var(--sf);color:var(--ink);box-shadow:var(--sh);}
+.cpick{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.cp{padding:6px 14px;font-size:12px;font-weight:500;border:0.5px solid var(--bd2);border-radius:20px;background:transparent;color:var(--ink2);cursor:pointer;font-family:inherit;transition:all .12s;}
+.cp:hover{background:var(--bg2);}
+.cp.on{background:var(--sf);color:var(--ink);border-color:var(--bd2);box-shadow:var(--sh);}
+.cleg{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;font-size:11px;color:var(--ink2);}
+.cli{display:flex;align-items:center;gap:4px;}
+.clsw{width:10px;height:10px;border-radius:2px;display:inline-block;}
+
+/* STATEMENT / JATS */
+.stbox{background:var(--bg2);border:0.5px solid var(--bd2);border-radius:var(--r);padding:16px 18px;font-size:13px;color:var(--ink2);line-height:1.9;font-style:italic;}
+.jbox{background:var(--bg2);border:0.5px solid var(--bd2);border-radius:var(--r);padding:14px 16px;font-size:11px;font-family:'DM Mono',monospace;color:var(--ink2);line-height:1.7;overflow-x:auto;white-space:pre;}
+.crow{margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;}
+.upills{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;}
+.upill{padding:3px 10px;border-radius:20px;font-size:11px;color:var(--ink3);border:0.5px dashed var(--bd2);}
+.shbox{background:var(--bg2);border:0.5px solid var(--bd2);border-radius:var(--r);padding:12px 14px;font-size:11px;font-family:'DM Mono',monospace;color:var(--ink2);word-break:break-all;line-height:1.5;}
+
+/* PREVIEW */
+.prov{display:none;position:fixed;inset:0;background:var(--bg);z-index:100;overflow-y:auto;padding:36px 20px 80px;}
+.prov.show{display:block;}
+.proi{max-width:880px;margin:0 auto;}
+.proh{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;}
+.prot{font-family:'DM Serif Display',serif;font-size:24px;font-weight:400;color:var(--ink);}
+.proa{font-size:12px;color:var(--ink3);margin-top:4px;}
+
+/* FOOTER */
+footer{border-top:0.5px solid var(--bd2);margin-top:48px;padding:28px 0 12px;}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+@media(max-width:600px){.fgrid{grid-template-columns:1fr;}}
+.fst{font-weight:500;color:var(--ink2);margin-bottom:6px;font-size:13px;}
+.fblock{font-size:12px;color:var(--ink3);line-height:1.9;}
+.fblock a{color:var(--ac);text-decoration:none;}
+.fblock a:hover{text-decoration:underline;}
+.fbio{font-size:12px;color:var(--ink2);line-height:1.75;margin-top:8px;padding-top:8px;border-top:0.5px solid var(--bd);}
+.disc{margin-top:20px;padding:14px 16px;background:var(--bg2);border-radius:var(--rsm);border-left:3px solid var(--bd2);font-size:11px;color:var(--ink3);line-height:1.75;}
+.disc strong{color:var(--ink2);}
+.fbot{margin-top:16px;padding-top:12px;border-top:0.5px solid var(--bd);text-align:center;font-size:11px;color:var(--ink3);}
+.fbot a{color:var(--ac);text-decoration:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div>
+    <div class="brand-name">CRediT <em>Profiler</em></div>
+    <div class="brand-sub" id="hdsub"></div>
+  </div>
+  <div class="langs">
+    <button class="lb on" onclick="setLang('en',this)">EN</button>
+    <button class="lb" onclick="setLang('es',this)">ES</button>
+    <button class="lb" onclick="setLang('zh',this)">中文</button>
+    <button class="lb" onclick="setLang('pt',this)">PT</button>
+    <button class="lb" onclick="setLang('fr',this)">FR</button>
+    <button class="lb" onclick="setLang('ar',this)">العربية</button>
+  </div>
+</header>
+
+<div class="tabs">
+  <button class="tab on"  onclick="switchTab('home',this)"   data-i="tabHome"></button>
+  <button class="tab"     onclick="switchTab('assign',this)" data-i="tabAssign"></button>
+  <button class="tab"     onclick="switchTab('history',this)"data-i="tabHistory"></button>
+</div>
+
+<!-- HOME + EXPLORE (unified) -->
+<div id="pane-home">
+  <div class="about-box" id="about-box"></div>
+  <div class="explore-divider" data-i="exploreSection"></div>
+  <div class="sw"><span class="si">⌕</span><input type="text" id="search" oninput="renderGrid()" data-i-ph="searchPh"></div>
+  <div class="fr" id="filter-row"></div>
+  <div class="dbox h" id="dbox">
+    <div class="dbt"><div class="dbtitle" id="dbtitle"></div><button class="dbc" onclick="closeDetail()">✕</button></div>
+    <div class="dbdef" id="dbdef"></div>
+    <div class="dbex" data-i="exLabel"></div>
+    <div class="expills" id="dbpills"></div>
+  </div>
+  <div class="rgrid" id="roles-grid"></div>
+</div>
+
+<!-- ASSIGN -->
+<div id="pane-assign" style="display:none">
+
+  <!-- PRIMARY ACTION: Add author -->
+  <div class="add-hero">
+    <div class="add-hero-label" data-i="addHeroLabel"></div>
+    <div class="add-hero-sub" data-i="addHeroSub"></div>
+    <div class="add-row">
+      <input type="text" id="new-author" data-i-ph="authorPh" onkeydown="if(event.key==='Enter')addAuthor()">
+      <button class="btn-hero" onclick="addAuthor()" data-i="btnAdd"></button>
+    </div>
+  </div>
+
+  <div class="astack" id="astack"></div>
+  <div class="calerts" id="calerts"></div>
+  <div class="vmsg" id="vmsg"></div>
+  <div class="wmsg" id="wmsg"></div>
+  <div class="brow" id="gen-row" style="display:none">
+    <button class="btn btg" onclick="clearAll()" data-i="btnClear"></button>
+    <button class="btn btp" onclick="submit()" data-i="btnGen"></button>
+  </div>
+  <div id="rw"></div>
+
+  <!-- ARTICLE (collapsed) -->
+  <div class="panel" id="art-panel" style="margin-top:24px">
+    <div class="ph" onclick="togglePanel('art')">
+      <div class="ph-l">
+        <span class="slbl" style="margin:0" data-i="articleLabel"></span>
+        <span id="art-hint" style="font-size:11px;color:var(--ink3);margin-left:8px"></span>
+      </div>
+      <span class="pc" id="pc-art" style="transform:rotate(0)">▼</span>
+    </div>
+    <div class="pb" id="pb-art">
+      <div class="agrid">
+        <div class="ff full"><label data-i="fieldTitle"></label><input type="text" id="art-title" data-i-ph="titlePh" oninput="updateArtHint()"></div>
+        <div class="ff"><label>DOI</label><input type="text" id="art-doi" placeholder="10.xxxx/xxxxx" oninput="updateArtHint()"></div>
+        <div class="ff"><label data-i="fieldJournal"></label><input type="text" id="art-journal" data-i-ph="journalPh" oninput="updateArtHint()"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WEIGHTS (open) -->
+  <div class="panel" id="wts-panel">
+    <div class="ph open" onclick="togglePanel('wts')">
+      <div class="ph-l"><span class="slbl" style="margin:0" data-i="weightsLabel"></span></div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div id="wts-total-wrap" style="display:flex;align-items:center;gap:6px;font-size:12px">
+          <span data-i="wtsTotal" style="color:var(--ink3)"></span>
+          <span id="wts-total" style="font-family:'DM Mono',monospace;font-weight:500;font-size:14px;color:var(--ink)">100</span>
+          <span style="font-size:11px;color:var(--ink3)">/100</span>
+          <span id="wts-indicator" style="font-size:11px;display:none"></span>
+        </div>
+        <button class="btn btg bsm" onclick="event.stopPropagation();resetW()" data-i="btnResetW"></button>
+        <span class="pc" id="pc-wts" style="transform:rotate(180deg)">▼</span>
+      </div>
+    </div>
+    <div class="pb open" id="pb-wts">
+      <div class="wgrid" id="wgrid"></div>
+      <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;font-size:11px;color:var(--ink3)">
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:var(--wg);display:inline-block"></span>9–10</span>
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:var(--wb);display:inline-block"></span>7–8</span>
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:var(--wa);display:inline-block"></span>5–6</span>
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:var(--wo);display:inline-block"></span>3–4</span>
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:var(--wr);display:inline-block"></span>1–2</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROLE LIMIT -->
+  <div class="panel">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <span class="slbl" style="margin:0" data-i="rlLabel"></span>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink2);cursor:pointer">
+        <input type="checkbox" id="rl-on" checked onchange="renderAuthors();if(showRes)renderResults()" style="accent-color:var(--ac)">
+        <span data-i="rlCheck"></span>
+      </label>
+    </div>
+  </div>
+
+  <!-- EXPORT (collapsed) -->
+  <div class="panel">
+    <div class="ph" onclick="togglePanel('io')">
+      <div class="ph-l"><span class="slbl" style="margin:0" data-i="ioLabel"></span></div>
+      <span class="pc" id="pc-io" style="transform:rotate(0)">▼</span>
+    </div>
+    <div class="pb" id="pb-io">
+      <div class="ior" style="margin-top:12px">
+        <button class="btn bto bsm" onclick="saveSnap()" data-i="btnSnap"></button>
+        <button class="btn bto bsm" onclick="showPreview()" data-i="btnPreview"></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HISTORY -->
+<div id="pane-history" style="display:none">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+    <div class="slbl" style="margin:0" data-i="histLabel"></div>
+    <button class="btn btg bsm" onclick="clearHistory()" data-i="btnClrHist"></button>
+  </div>
+  <div class="hlist" id="hlist"></div>
+</div>
+
+<!-- PREVIEW -->
+<div class="prov" id="prov">
+  <div class="proi">
+    <div class="proh">
+      <div><div class="prot" data-i="prevTitle"></div><div class="proa" id="prov-art"></div></div>
+      <button class="btn bto" onclick="hidePreview()" data-i="btnClose"></button>
+    </div>
+    <div id="prev-body"></div>
+  </div>
+</div>
+
+<footer>
+  <div class="fgrid">
+    <div>
+      <div class="fst" data-i="footAuthorsTitle"></div>
+      <div class="fblock">
+        <div><strong>Álvaro Cabezas-Clavijo</strong></div>
+        <div>Universidad Internacional de La Rioja (UNIR)</div>
+        <div><a href="mailto:alvaro.cabezas@unir.net">alvaro.cabezas@unir.net</a></div>
+        <div style="margin-top:8px"><strong>Rafael Repiso</strong></div>
+        <div>Universidad de Granada (UGR)</div>
+        <div><a href="mailto:repiso@ugr.es">repiso@ugr.es</a></div>
+      </div>
+      <div class="fbio" data-i="footBio"></div>
+    </div>
+    <div>
+      <div class="fst" data-i="footTechTitle"></div>
+      <div class="fblock">
+        <div data-i="footEdition"></div>
+        <div style="margin-top:6px">Claude Sonnet 4.6 · Anthropic, 2026</div>
+        <div style="margin-top:6px"><a href="https://credit.niso.org/" target="_blank">credit.niso.org</a> · <a href="https://jats4r.niso.org/credit-taxonomy/" target="_blank">JATS4R</a></div>
+        <div>ANSI/NISO Z39.104-2022 · CC-BY 4.0</div>
+        <div style="margin-top:10px" class="fst" data-i="footContactTitle"></div>
+        <div data-i="footContactText"></div>
+      </div>
+    </div>
+  </div>
+  <div class="disc"><strong data-i="discTitle"></strong> <span data-i="discText"></span></div>
+  <div class="fbot">CRediT Profiler v1.0 · 28/03/2026 · <a href="https://credit.niso.org/" target="_blank">credit.niso.org</a></div>
+</footer>
+</div>
+
+<script>
+const ROLES=[
+  {id:1,cat:'ideation',uri:'conceptualization',jt:'Conceptualization'},
+  {id:2,cat:'data',uri:'data-curation',jt:'Data curation'},
+  {id:3,cat:'analysis',uri:'formal-analysis',jt:'Formal analysis'},
+  {id:4,cat:'management',uri:'funding-acquisition',jt:'Funding acquisition'},
+  {id:5,cat:'data',uri:'investigation',jt:'Investigation'},
+  {id:6,cat:'ideation',uri:'methodology',jt:'Methodology'},
+  {id:7,cat:'management',uri:'project-administration',jt:'Project administration'},
+  {id:8,cat:'management',uri:'resources',jt:'Resources'},
+  {id:9,cat:'analysis',uri:'software',jt:'Software'},
+  {id:10,cat:'governance',uri:'supervision',jt:'Supervision'},
+  {id:11,cat:'governance',uri:'validation',jt:'Validation'},
+  {id:12,cat:'output',uri:'visualization',jt:'Visualization'},
+  {id:13,cat:'output',uri:'writing-original-draft',jt:'Writing – original draft'},
+  {id:14,cat:'output',uri:'writing-review-editing',jt:'Writing – review & editing'},
+];
+const FIXED=new Set([]); // no fixed roles — all editable
+const MAND=13;
+const CATS=['ideation','data','analysis','management','governance','output'];
+const CM={
+  ideation:{bg:'#EEEDFE',t:'#3C3489',bar:'#7F77DD'},
+  data:{bg:'#E1F5EE',t:'#085041',bar:'#1D9E75'},
+  analysis:{bg:'#FAEEDA',t:'#633806',bar:'#BA7517'},
+  management:{bg:'#FAECE7',t:'#4A1B0C',bar:'#D85A30'},
+  governance:{bg:'#E6F1FB',t:'#042C53',bar:'#378ADD'},
+  output:{bg:'#EAF3DE',t:'#173404',bar:'#639922'},
+};
+// Updated default weights
+const DW={1:10,2:5,3:8,4:5,5:9,6:9,7:5,8:5,9:6,10:8,11:6,12:6,13:10,14:8};
+let W={...DW};
+
+const I18N={
+en:{tabHome:'Roles & Overview',tabAssign:'Assign to authors',tabHistory:'History',
+hdsub:'Contributor Role Taxonomy · ANSI/NISO · CC-BY 4.0',
+aboutTitle:'What is CRediT Profiler?',
+aboutP1:'<strong>CRediT</strong> (Contributor Roles Taxonomy) is a community-owned standard of <strong>14 contributor roles</strong> designed to describe the specific contributions of each author of a research article. Approved as ANSI/NISO Z39.104-2022 and licensed under CC-BY 4.0, it is widely adopted by publishers, repositories and research assessment bodies worldwide.',
+aboutP2:'<strong>CRediT Profiler</strong> is an interactive tool for assigning, visualising and exporting CRediT statements. Add authors and assign roles; generate contribution matrices; produce JATS 1.2 XML (Crossref/PubMed compatible); calculate weighted scores; and export ready-to-use statements.',
+aboutP3:'Browse the 14 roles below, then go to <strong>Assign to authors</strong> to build your CRediT statement.',
+aboutTags:['14 standardised roles','JATS 1.2 XML','Crossref compatible','Weighted scoring','6 languages','Free & open'],
+exploreSection:'Explore the 14 CRediT roles',
+searchPh:'Search roles…',exLabel:'Activity examples',
+ioLabel:'Export & share',btnExpJSON:'Export JSON',btnExpCSV:'Export CSV',btnShare:'Share URL',btnSnap:'Save snapshot',btnPreview:'Preview',
+addHeroLabel:'Start here — add your authors',addHeroSub:'Enter each author\'s name and press Enter or click Add. Then assign CRediT roles to each one.',
+articleLabel:'Article information',fieldTitle:'Title',titlePh:'Article title',fieldJournal:'Journal',journalPh:'Journal name',
+weightsLabel:'Role weights (contribution scoring)',btnResetW:'Reset',fixedNote:'fixed at 10',wtsTotal:'Total:',wtOver:'Over 100 — reduce some weights',wtUnder:'Under 100 — add more weight',wtOk:'✓ Total = 100',
+rlLabel:'Role limit alert',rlCheck:'Warn if author has > 8 roles (3+ authors only)',
+authorPh:'Author name (e.g. Jane Smith)',btnAdd:'+ Add author',btnClear:'Clear all',btnGen:'Generate results ↗',
+btnClose:'✕ Close',prevTitle:'CRediT Statement',
+histLabel:'Saved snapshots',btnClrHist:'Clear all',copyBtn:'Copy',copied:'Copied!',
+posLabel:'Position',corrLabel:'Corresponding author',posOf:'of',firstL:'1st author',lastL:'Last author',authN:'Author #',
+bCorr:'Corresponding',bErr:'Needs a role',bOver:'> 8 roles',noRoles:'No roles assigned',rp:'roles',
+sortPos:'By position',sortCnt:'By roles',sortSc:'By score',
+secSum:'Summary',secMx:'Contribution matrix',secSc:'Author scores',secCh:'Visualizations',
+secSt:'CRediT statement',secJATS:'JATS 1.2 XML',secUn:'Unused roles',secTL:'Contribution timeline',stFullName:'Full names',stInitials:'Initials',
+ofUsed:'of roles used',rUsed:'Roles used',auths:'Authors',avail:'available',
+mRoles:'Roles',mScore:'Score',
+chBar:'Bar',chRad:'Radial',chDot:'Dot matrix',chHeat:'Heatmap',chStk:'Stacked',chRdr:'Radar',
+btnPNG:'Export PNG',tlPhaseFlow:'Research phase flow',
+warnCorr:'More than one corresponding author. Most journals allow only one.',
+errMand:'At least one author must have "Writing – original draft".',
+sugPfx:'Also consider:',emptyS:'No authors yet. Enter a name above and press Enter.',
+vMiss:'Need at least one role: ',vEmpty:'Add at least one author first.',mand:'Required',
+rlWarn:'has more than 8 roles assigned.',
+coNoVal:'Nobody has the Validation role. Consider adding it.',
+coNoSup:'No last/corresponding author has Supervision or Funding acquisition.',
+coNoWR:'Nobody has Writing – review & editing.',
+snapSaved:'Snapshot saved! You can find it in the History tab.',histEmpty:'No snapshots saved yet.',restore:'Restore',
+footAuthorsTitle:'Authors of this tool',
+footBio:'Álvaro Cabezas-Clavijo and Rafael Repiso are researchers in the fields of Scientific Publishing and Research Assessment.',
+footTechTitle:'Technical information',footEdition:'First edition: 28 March 2026',
+footContactTitle:'Contact & suggestions',footContactText:'We welcome feedback, suggestions and bug reports.',
+discTitle:'Disclaimer:',
+discText:'CRediT Profiler is provided for informational and research purposes only. The authors of this tool have no affiliation with CRediT or NISO. They accept no responsibility for errors in role assignment or any consequences arising from use of the generated outputs. Role assignments are the sole responsibility of the authors of each work. CRediT is a NISO standard (ANSI/NISO Z39.104-2022) licensed under CC-BY 4.0.',
+catL:{ideation:'Conception',data:'Data & Investigation',analysis:'Analysis',management:'Management',governance:'Governance',output:'Output'},
+rn:['Conceptualization','Data curation','Formal analysis','Funding acquisition','Investigation','Methodology','Project administration','Resources','Software','Supervision','Validation','Visualization','Writing – original draft','Writing – review & editing'],
+rd:['Ideas; formulation or evolution of overarching research goals and aims.','Management activities to annotate, scrub, and maintain research data for initial use and later re-use.','Application of statistical, mathematical, computational, or other formal techniques to analyze or synthesize study data.','Acquisition of the financial support for the project leading to this publication.','Conducting a research and investigation process; performing the experiments or data/evidence collection.','Development or design of methodology; creation of models.','Management and coordination responsibility for the research activity planning and execution.','Provision of study materials, reagents, instrumentation, computing resources, or other analysis tools.','Programming, software development; implementation of the code and supporting algorithms; testing of existing code components.','Oversight and leadership responsibility for the research activity planning and execution, including mentorship external to the core team.','Verification of the overall replication/reproducibility of results, experiments and other research outputs.','Preparation, creation and/or presentation of the published work, specifically visualization/data presentation.','Preparation, creation and/or presentation of the published work, specifically writing the initial draft (including substantive translation).','Critical review, commentary or revision of the published work by those from the original research group, including pre- or post-publication stages.'],
+re:[['Initial hypothesis','Problem definition','Research objectives','Theoretical framework'],['Metadata annotation','Data cleaning','Dataset maintenance','Data repositories'],['Statistical analysis','Mathematical modeling','Machine learning','Results synthesis'],['Grant applications','Funder relations','Project budget','Funding contracts'],['Lab experiments','Field work','Interviews','Sample collection'],['Experimental design','Model creation','Study protocols','Methodological frameworks'],['Task planning','Team coordination','Progress tracking','Internal communication'],['Lab reagents','Computing resources','Instrumentation','Biological samples'],['Code development','Analysis algorithms','Software testing','Analysis libraries'],['Thesis supervision','Researcher mentorship','Team review','Scientific leadership'],['Experiment replication','Results verification','Reproducibility testing','Data audit'],['Graphs & figures','Infographics','Data maps','Interactive visualizations'],['Manuscript writing','Text translation','Article structure','Section drafting'],['Critical review','Text editing','Scientific commentary','Post-publication review']],
+},
+es:{tabHome:'Roles y descripción',tabAssign:'Asignar autores',tabHistory:'Historial',
+hdsub:'Taxonomía de roles de contribución · ANSI/NISO · CC-BY 4.0',
+aboutTitle:'¿Qué es CRediT Profiler?',
+aboutP1:'<strong>CRediT</strong> es un estándar de <strong>14 roles de contribución</strong> diseñado para describir las aportaciones específicas de cada autor de un artículo científico. Aprobado como ANSI/NISO Z39.104-2022 con licencia CC-BY 4.0, es ampliamente adoptado por editores, repositorios y organismos de evaluación de la investigación.',
+aboutP2:'<strong>CRediT Profiler</strong> permite asignar, visualizar y exportar declaraciones CRediT. Añade autores y asígnales roles; genera matrices de contribución; produce XML JATS 1.2 (compatible con Crossref y PubMed); calcula puntuaciones ponderadas; y exporta declaraciones listas para usar en manuscritos.',
+aboutP3:'Explora los 14 roles a continuación y luego ve a <strong>Asignar autores</strong> para construir tu declaración CRediT.',
+aboutTags:['14 roles normalizados','XML JATS 1.2','Compatible con Crossref','Puntuación ponderada','6 idiomas','Libre y abierto'],
+exploreSection:'Explorar los 14 roles CRediT',
+searchPh:'Buscar roles…',exLabel:'Ejemplos de actividad',
+ioLabel:'Exportar y compartir',btnExpJSON:'Exportar JSON',btnExpCSV:'Exportar CSV',btnShare:'Compartir URL',btnSnap:'Guardar estado',btnPreview:'Vista previa',
+addHeroLabel:'Empieza aquí — añade tus autores',addHeroSub:'Introduce el nombre de cada autor y pulsa Intro o haz clic en Añadir. Después asigna roles CRediT a cada uno.',
+articleLabel:'Información del artículo',fieldTitle:'Título',titlePh:'Título del artículo',fieldJournal:'Revista',journalPh:'Nombre de la revista',
+weightsLabel:'Pesos de roles (puntuación de contribución)',btnResetW:'Restablecer',fixedNote:'fijo en 10',wtsTotal:'Total:',wtOver:'Supera 100 — reduce algunos pesos',wtUnder:'Menos de 100 — añade más peso',wtOk:'✓ Total = 100',
+rlLabel:'Alerta de límite de roles',rlCheck:'Avisar si un autor tiene > 8 roles (solo con 3+ autores)',
+authorPh:'Nombre del autor (ej. Ana García)',btnAdd:'+ Añadir autor',btnClear:'Borrar todo',btnGen:'Generar resultados ↗',
+btnClose:'✕ Cerrar',prevTitle:'Declaración CRediT',
+histLabel:'Estados guardados',btnClrHist:'Borrar todo',copyBtn:'Copiar',copied:'¡Copiado!',
+posLabel:'Posición',corrLabel:'Autor de correspondencia',posOf:'de',firstL:'1.er autor',lastL:'Último autor',authN:'Autor n.º',
+bCorr:'Correspondencia',bErr:'Sin rol',bOver:'> 8 roles',noRoles:'Sin roles asignados',rp:'roles',
+sortPos:'Por posición',sortCnt:'Por roles',sortSc:'Por puntuación',
+secSum:'Resumen',secMx:'Matriz de contribuciones',secSc:'Puntuaciones',secCh:'Visualizaciones',
+secSt:'Declaración CRediT',secJATS:'XML JATS 1.2',secUn:'Roles no utilizados',secTL:'Línea temporal de contribuciones',stFullName:'Nombre completo',stInitials:'Iniciales',
+ofUsed:'de los roles usados',rUsed:'Roles usados',auths:'Autores',avail:'disponibles',
+mRoles:'Roles',mScore:'Puntuación',
+chBar:'Barras',chRad:'Radial',chDot:'Puntos',chHeat:'Mapa de calor',chStk:'Apilado',chRdr:'Radar',
+btnPNG:'Exportar PNG',tlPhaseFlow:'Flujo de fases de investigación',
+warnCorr:'Más de un autor de correspondencia. La mayoría de revistas solo permiten uno.',
+errMand:'Al menos un autor debe tener "Escritura – borrador original".',
+sugPfx:'Considera también:',emptyS:'Sin autores. Escribe un nombre arriba y pulsa Intro.',
+vMiss:'Necesitan al menos un rol: ',vEmpty:'Añade al menos un autor primero.',mand:'Obligatorio',
+rlWarn:'tiene más de 8 roles asignados.',
+coNoVal:'Nadie tiene el rol Validación. Considera añadirlo.',
+coNoSup:'Ningún último autor o autor de correspondencia tiene Supervisión o Financiación.',
+coNoWR:'Nadie tiene Escritura – revisión y edición.',
+snapSaved:'¡Estado guardado! Puedes encontrarlo en la pestaña Historial.',histEmpty:'No hay estados guardados.',restore:'Restaurar',
+footAuthorsTitle:'Autores de esta herramienta',
+footBio:'Álvaro Cabezas-Clavijo y Rafael Repiso son investigadores en el ámbito de la Publicación Científica y Evaluación de la Investigación.',
+footTechTitle:'Información técnica',footEdition:'Primera edición: 28 de marzo de 2026',
+footContactTitle:'Contacto y sugerencias',footContactText:'Agradecemos comentarios, sugerencias e informes de errores.',
+discTitle:'Exención de responsabilidad:',
+discText:'CRediT Profiler se ofrece únicamente con fines informativos y de investigación. Los autores de esta herramienta no tienen ninguna relación con CRediT ni con NISO. No asumen ninguna responsabilidad por errores en la asignación de roles CRediT ni por las consecuencias derivadas del uso de los resultados generados. La asignación de roles es responsabilidad exclusiva de los autores de cada trabajo. CRediT es un estándar NISO (ANSI/NISO Z39.104-2022) con licencia CC-BY 4.0.',
+catL:{ideation:'Concepción',data:'Datos e Investigación',analysis:'Análisis',management:'Gestión',governance:'Gobernanza',output:'Producción'},
+rn:['Conceptualización','Curación de datos','Análisis formal','Obtención de financiación','Investigación','Metodología','Administración del proyecto','Recursos','Software','Supervisión','Validación','Visualización','Escritura – borrador original','Escritura – revisión y edición'],
+rd:['Ideas; formulación o evolución de los objetivos y metas generales de la investigación.','Actividades de gestión para anotar, limpiar y mantener los datos de investigación.','Aplicación de técnicas estadísticas, matemáticas o computacionales para analizar o sintetizar datos.','Adquisición del apoyo financiero para el proyecto.','Realizar el proceso de investigación; realizar los experimentos o recoger datos y evidencias.','Desarrollo o diseño de la metodología; creación de modelos.','Responsabilidad de gestión y coordinación de la planificación y ejecución de la investigación.','Provisión de materiales, reactivos, instrumentación, recursos informáticos u otras herramientas.','Programación y desarrollo de software; implementación del código y algoritmos.','Responsabilidad de supervisión y liderazgo de la investigación, incluyendo mentoría externa.','Verificación de la replicabilidad/reproducibilidad de los resultados y otras salidas de la investigación.','Preparación, creación y/o presentación del trabajo publicado; visualización de datos.','Preparación del trabajo publicado; redacción del borrador inicial.','Revisión crítica del trabajo publicado por miembros del grupo de investigación original.'],
+re:[['Hipótesis inicial','Definición del problema','Objetivos del estudio','Marco teórico'],['Anotación de metadatos','Limpieza de datos','Mantenimiento de datasets','Repositorios'],['Análisis estadístico','Modelado matemático','Machine learning','Síntesis de resultados'],['Solicitud de becas','Relación con financiadores','Presupuesto','Contratos'],['Experimentos de laboratorio','Trabajo de campo','Entrevistas','Recolección de muestras'],['Diseño experimental','Creación de modelos','Protocolos de estudio','Marcos metodológicos'],['Planificación de tareas','Coordinación del equipo','Seguimiento del progreso','Comunicación interna'],['Reactivos de laboratorio','Recursos de computación','Instrumentación','Muestras biológicas'],['Desarrollo de código','Algoritmos de análisis','Pruebas de software','Librerías de análisis'],['Dirección de tesis','Mentoría de investigadores','Revisión del equipo','Liderazgo científico'],['Replicación de experimentos','Verificación de resultados','Pruebas de reproducibilidad','Auditoría de datos'],['Gráficos y figuras','Infografías','Mapas de datos','Visualizaciones interactivas'],['Redacción del manuscrito','Traducción del texto','Estructura del artículo','Redacción de secciones'],['Revisión crítica','Edición del texto','Comentarios científicos','Revisión post-publicación']],
+},
+zh:{tabHome:'角色与概述',tabAssign:'分配作者',tabHistory:'历史',
+hdsub:'贡献者角色分类法 · ANSI/NISO · CC-BY 4.0',
+aboutTitle:'什么是 CRediT Profiler？',
+aboutP1:'<strong>CRediT</strong> 是包含 <strong>14 个贡献者角色</strong> 的社区标准，旨在描述研究文章每位作者的具体贡献。获批为 ANSI/NISO Z39.104-2022，采用 CC-BY 4.0 许可。',
+aboutP2:'<strong>CRediT Profiler</strong> 帮助您分配、可视化和导出 CRediT 声明。添加作者并分配角色；生成贡献矩阵；以 JATS 1.2 格式生成 XML；计算加权贡献分数；导出可直接用于手稿的声明。',
+aboutP3:'在下方浏览 14 个角色，然后前往<strong>分配作者</strong>标签页构建您的 CRediT 声明。',
+aboutTags:['14个标准化角色','JATS 1.2 XML','Crossref兼容','加权评分','6种语言','免费开放'],
+exploreSection:'探索 14 个 CRediT 角色',
+searchPh:'搜索角色…',exLabel:'活动示例',
+ioLabel:'导出与分享',btnExpJSON:'导出 JSON',btnExpCSV:'导出 CSV',btnShare:'分享链接',btnSnap:'保存快照',btnPreview:'预览',
+addHeroLabel:'从这里开始 — 添加作者',addHeroSub:'输入每位作者的姓名，按 Enter 或点击添加。然后为每位作者分配 CRediT 角色。',
+articleLabel:'文章信息',fieldTitle:'标题',titlePh:'文章标题',fieldJournal:'期刊',journalPh:'期刊名称',
+weightsLabel:'角色权重（贡献评分）',btnResetW:'重置',fixedNote:'固定为 10',wtsTotal:'合计：',wtOver:'超过 100 — 请降低部分权重',wtUnder:'不足 100 — 请增加权重',wtOk:'✓ 合计 = 100',
+rlLabel:'角色数量限制',rlCheck:'当作者角色超过 8 个时警告（仅限 3 位以上作者）',
+authorPh:'作者姓名（如：张伟）',btnAdd:'+ 添加作者',btnClear:'清除全部',btnGen:'生成结果 ↗',
+btnClose:'✕ 关闭',prevTitle:'CRediT 声明',
+histLabel:'已保存的快照',btnClrHist:'清除全部',copyBtn:'复制',copied:'已复制！',
+posLabel:'位置',corrLabel:'通讯作者',posOf:'共',firstL:'第一作者',lastL:'末位作者',authN:'作者 #',
+bCorr:'通讯',bErr:'需要角色',bOver:'> 8 个角色',noRoles:'尚未分配角色',rp:'个角色',
+sortPos:'按位置',sortCnt:'按角色数',sortSc:'按评分',
+secSum:'摘要',secMx:'贡献矩阵',secSc:'作者评分',secCh:'可视化',
+secSt:'CRediT 声明',secJATS:'JATS 1.2 XML',secUn:'未使用的角色',secTL:'贡献时间线',stFullName:'全名',stInitials:'缩写',
+ofUsed:'占已用角色',rUsed:'已用角色',auths:'作者',avail:'可用',
+mRoles:'角色数',mScore:'评分',
+chBar:'条形图',chRad:'极坐标',chDot:'点阵图',chHeat:'热图',chStk:'堆积图',chRdr:'雷达图',
+btnPNG:'导出 PNG',tlPhaseFlow:'研究阶段流程',
+warnCorr:'检测到多个通讯作者。大多数期刊只允许一位。',
+errMand:'至少一位作者必须担任"撰写 – 初稿"角色。',
+sugPfx:'也请考虑：',emptyS:'尚未添加作者。输入姓名并按 Enter。',
+vMiss:'需要至少一个角色：',vEmpty:'请先添加至少一位作者。',mand:'必填',
+rlWarn:'拥有超过 8 个角色。',
+coNoVal:'没有作者分配验证角色。',coNoSup:'末位作者或通讯作者没有监督或资金获取角色。',coNoWR:'没有作者有撰写 – 审阅与编辑角色。',
+snapSaved:'快照已保存！您可以在历史标签页中找到它。',histEmpty:'尚未保存快照。',restore:'恢复',
+footAuthorsTitle:'工具作者',footBio:'Álvaro Cabezas-Clavijo 和 Rafael Repiso 是科学出版与研究评估领域的研究人员。',
+footTechTitle:'技术信息',footEdition:'第一版：2026 年 3 月 28 日',
+footContactTitle:'联系与建议',footContactText:'欢迎反馈、建议和错误报告。',
+discTitle:'免责声明：',
+discText:'CRediT Profiler 仅供参考和研究使用。本工具的作者与 CRediT 或 NISO 没有任何关联。对于角色分配错误或使用生成结果所产生的任何后果，作者不承担责任。CRediT 是 NISO 标准（ANSI/NISO Z39.104-2022），采用 CC-BY 4.0 许可。',
+catL:{ideation:'概念构建',data:'数据与研究',analysis:'分析',management:'管理',governance:'治理',output:'产出'},
+rn:['概念化','数据管理','形式分析','资金获取','调查研究','方法论','项目管理','资源提供','软件开发','监督指导','验证','可视化','撰写 – 初稿','撰写 – 审阅与编辑'],
+rd:['研究总体目标和方向的想法、制定或演进。','对研究数据进行注释、清理和维护。','应用统计、数学、计算技术对研究数据进行分析或综合。','获取支持本出版物项目的资金支持。','开展研究和调查过程，特别是进行实验或数据收集。','方法论的开发或设计；模型的创建。','对研究活动规划和执行的管理和协调责任。','提供研究材料、试剂、仪器、计算资源或其他分析工具。','编程、软件开发；代码和算法的实现。','对研究活动的监督和领导责任。','验证结果的整体可重复性/再现性。','对已发表作品的准备；特别是数据呈现。','对已发表作品的准备；特别是撰写初稿。','对已发表作品的批判性审查、评论或修改。'],
+re:[['初始假设','问题定义','研究目标','理论框架'],['元数据注释','数据清理','数据集维护','数据仓库'],['统计分析','数学建模','机器学习','结果综合'],['申请基金','与资助方沟通','项目预算','资助合同'],['实验室实验','实地调研','访谈','样本采集'],['实验设计','模型创建','研究方案','方法论框架'],['任务规划','团队协调','进度跟踪','内部沟通'],['实验室试剂','计算资源','仪器设备','生物样本'],['代码开发','分析算法','软件测试','分析库'],['论文指导','研究指导','团队审查','科学领导力'],['实验重复','结果核查','可重复性测试','数据审计'],['图表与图形','信息图表','数据地图','交互式可视化'],['稿件撰写','文本翻译','文章结构','章节撰写'],['批判性审查','文本编辑','科学评论','发表后审查']],
+},
+pt:{tabHome:'Funções e visão geral',tabAssign:'Atribuir autores',tabHistory:'Histórico',
+hdsub:'Taxonomia de funções de contribuição · ANSI/NISO · CC-BY 4.0',
+aboutTitle:'O que é o CRediT Profiler?',
+aboutP1:'O <strong>CRediT</strong> é um padrão de <strong>14 funções de contribuição</strong> para descrever as contribuições específicas de cada autor de um artigo científico. Aprovado como ANSI/NISO Z39.104-2022 e licenciado sob CC-BY 4.0.',
+aboutP2:'O <strong>CRediT Profiler</strong> permite atribuir, visualizar e exportar declarações CRediT. Adicione autores e atribua-lhes funções; gere matrizes de contribuição; produza XML JATS 1.2; calcule pontuações ponderadas; exporte declarações prontas a usar.',
+aboutP3:'Explore as 14 funções abaixo e aceda a <strong>Atribuir autores</strong> para construir a sua declaração CRediT.',
+aboutTags:['14 funções normalizadas','XML JATS 1.2','Compatível com Crossref','Pontuação ponderada','6 idiomas','Livre e aberto'],
+exploreSection:'Explorar as 14 funções CRediT',
+searchPh:'Pesquisar funções…',exLabel:'Exemplos de atividade',
+ioLabel:'Exportar e partilhar',btnExpJSON:'Exportar JSON',btnExpCSV:'Exportar CSV',btnShare:'Partilhar URL',btnSnap:'Guardar estado',btnPreview:'Pré-visualizar',
+addHeroLabel:'Comece aqui — adicione os seus autores',addHeroSub:'Introduza o nome de cada autor e prima Enter ou clique em Adicionar. Depois atribua funções CRediT a cada um.',
+articleLabel:'Informações do artigo',fieldTitle:'Título',titlePh:'Título do artigo',fieldJournal:'Revista',journalPh:'Nome da revista',
+weightsLabel:'Pesos das funções (pontuação de contribuição)',btnResetW:'Repor',fixedNote:'fixo em 10',wtsTotal:'Total:',wtOver:'Acima de 100 — reduza alguns pesos',wtUnder:'Abaixo de 100 — adicione mais peso',wtOk:'✓ Total = 100',
+rlLabel:'Alerta de limite de funções',rlCheck:'Avisar se autor tiver > 8 funções (3+ autores)',
+authorPh:'Nome do autor (ex. Maria Silva)',btnAdd:'+ Adicionar autor',btnClear:'Limpar tudo',btnGen:'Gerar resultados ↗',
+btnClose:'✕ Fechar',prevTitle:'Declaração CRediT',
+histLabel:'Estados guardados',btnClrHist:'Limpar tudo',copyBtn:'Copiar',copied:'Copiado!',
+posLabel:'Posição',corrLabel:'Autor de correspondência',posOf:'de',firstL:'1.º autor',lastL:'Último autor',authN:'Autor n.º',
+bCorr:'Correspondência',bErr:'Sem função',bOver:'> 8 funções',noRoles:'Sem funções atribuídas',rp:'funções',
+sortPos:'Por posição',sortCnt:'Por funções',sortSc:'Por pontuação',
+secSum:'Resumo',secMx:'Matriz de contribuições',secSc:'Pontuações',secCh:'Visualizações',
+secSt:'Declaração CRediT',secJATS:'XML JATS 1.2',secUn:'Funções não utilizadas',secTL:'Linha temporal de contribuições',stFullName:'Nome completo',stInitials:'Iniciais',
+ofUsed:'das funções usadas',rUsed:'Funções usadas',auths:'Autores',avail:'disponíveis',
+mRoles:'Funções',mScore:'Pontuação',
+chBar:'Barras',chRad:'Radial',chDot:'Pontos',chHeat:'Mapa de calor',chStk:'Empilhado',chRdr:'Radar',
+btnPNG:'Exportar PNG',tlPhaseFlow:'Fluxo das fases de investigação',
+warnCorr:'Mais de um autor de correspondência. A maioria das revistas permite apenas um.',
+errMand:'Pelo menos um autor deve ter "Redação – rascunho original".',
+sugPfx:'Considere também:',emptyS:'Sem autores ainda. Introduza um nome e prima Enter.',
+vMiss:'Precisam de pelo menos uma função: ',vEmpty:'Adicione pelo menos um autor primeiro.',mand:'Obrigatório',
+rlWarn:'tem mais de 8 funções atribuídas.',
+coNoVal:'Nenhum autor tem a função Validação.',coNoSup:'Nenhum último autor ou autor de correspondência tem Supervisão ou Financiamento.',coNoWR:'Nenhum autor tem Redação – revisão e edição.',
+snapSaved:'Estado guardado! Pode encontrá-lo no separador Histórico.',histEmpty:'Sem estados guardados.',restore:'Restaurar',
+footAuthorsTitle:'Autores desta ferramenta',
+footBio:'Álvaro Cabezas-Clavijo e Rafael Repiso são investigadores nas áreas de Publicação Científica e Avaliação da Investigação.',
+footTechTitle:'Informação técnica',footEdition:'Primeira edição: 28 de março de 2026',
+footContactTitle:'Contacto e sugestões',footContactText:'Agradecemos comentários, sugestões e relatórios de erros.',
+discTitle:'Aviso legal:',
+discText:'O CRediT Profiler é fornecido apenas para fins informativos e de investigação. Os autores desta ferramenta não têm qualquer relação com o CRediT ou a NISO. Não assumem qualquer responsabilidade por erros na atribuição de funções ou por consequências decorrentes da utilização dos resultados gerados. O CRediT é uma norma NISO (ANSI/NISO Z39.104-2022) licenciada sob CC-BY 4.0.',
+catL:{ideation:'Conceção',data:'Dados e Investigação',analysis:'Análise',management:'Gestão',governance:'Governança',output:'Produção'},
+rn:['Conceptualização','Curadoria de dados','Análise formal','Aquisição de financiamento','Investigação','Metodologia','Administração do projeto','Recursos','Software','Supervisão','Validação','Visualização','Redação – rascunho original','Redação – revisão e edição'],
+rd:['Ideias; formulação ou evolução dos objetivos gerais de investigação.','Atividades de gestão para anotar, limpar e manter dados de investigação.','Aplicação de técnicas estatísticas, matemáticas ou computacionais.','Aquisição do apoio financeiro para o projeto.','Conduzir o processo de investigação; realizar experimentos ou recolha de dados.','Desenvolvimento ou design da metodologia; criação de modelos.','Responsabilidade de gestão e coordenação da investigação.','Fornecimento de materiais, reagentes, instrumentação ou recursos informáticos.','Programação, desenvolvimento de software; implementação do código e algoritmos.','Responsabilidade de supervisão e liderança da investigação.','Verificação da reprodutibilidade dos resultados.','Preparação do trabalho publicado; visualização de dados.','Preparação do trabalho publicado; redação do rascunho inicial.','Revisão crítica do trabalho publicado pelos membros do grupo de investigação.'],
+re:[['Hipótese','Problema','Objetivos','Quadro teórico'],['Metadados','Limpeza','Manutenção','Repositórios'],['Estatística','Modelação','ML','Síntese'],['Bolsas','Financiadores','Orçamento','Contratos'],['Experiências','Campo','Entrevistas','Amostras'],['Design','Modelos','Protocolos','Quadros'],['Tarefas','Equipa','Progresso','Comunicação'],['Reagentes','Informática','Instrumentação','Biológico'],['Código','Algoritmos','Testes','Bibliotecas'],['Teses','Mentoria','Revisão','Liderança'],['Replicação','Verificação','Reprodutibilidade','Auditoria'],['Gráficos','Infográficos','Mapas','Visualizações'],['Manuscrito','Tradução','Estrutura','Secções'],['Revisão','Edição','Comentários','Pós-publicação']],
+},
+fr:{tabHome:'Rôles et présentation',tabAssign:'Assigner les auteurs',tabHistory:'Historique',
+hdsub:'Taxonomie des rôles contributeurs · ANSI/NISO · CC-BY 4.0',
+aboutTitle:"Qu'est-ce que CRediT Profiler ?",
+aboutP1:"<strong>CRediT</strong> est un standard de <strong>14 rôles de contribution</strong> pour décrire les apports spécifiques de chaque auteur d'un article scientifique. Approuvé sous ANSI/NISO Z39.104-2022, sous licence CC-BY 4.0.",
+aboutP2:"<strong>CRediT Profiler</strong> permet d'attribuer, visualiser et exporter des déclarations CRediT. Ajoutez des auteurs et attribuez-leur des rôles ; générez des matrices de contributions ; produisez du XML JATS 1.2 ; calculez des scores pondérés ; exportez des déclarations prêtes à l'emploi.",
+aboutP3:"Explorez les 14 rôles ci-dessous, puis accédez à <strong>Assigner les auteurs</strong> pour construire votre déclaration CRediT.",
+aboutTags:['14 rôles normalisés','XML JATS 1.2','Compatible Crossref','Score pondéré','6 langues','Libre et ouvert'],
+exploreSection:'Explorer les 14 rôles CRediT',
+searchPh:'Rechercher des rôles…',exLabel:"Exemples d'activité",
+ioLabel:'Exporter et partager',btnExpJSON:'Exporter JSON',btnExpCSV:'Exporter CSV',btnShare:"Partager l'URL",btnSnap:'Sauvegarder',btnPreview:'Aperçu',
+addHeroLabel:'Commencez ici — ajoutez vos auteurs',addHeroSub:"Saisissez le nom de chaque auteur et appuyez sur Entrée ou cliquez sur Ajouter. Attribuez ensuite des rôles CRediT à chacun.",
+articleLabel:"Informations sur l'article",fieldTitle:'Titre',titlePh:"Titre de l'article",fieldJournal:'Revue',journalPh:'Nom de la revue',
+weightsLabel:'Poids des rôles (score de contribution)',btnResetW:'Réinitialiser',fixedNote:'fixé à 10',wtsTotal:'Total :',wtOver:'Supérieur à 100 — réduisez certains poids',wtUnder:'Inférieur à 100 — ajoutez du poids',wtOk:'✓ Total = 100',
+rlLabel:'Alerte limite de rôles',rlCheck:'Avertir si un auteur a > 8 rôles (3 auteurs minimum)',
+authorPh:"Nom de l'auteur (ex. Marie Dupont)",btnAdd:'+ Ajouter un auteur',btnClear:'Tout effacer',btnGen:'Générer les résultats ↗',
+btnClose:'✕ Fermer',prevTitle:'Déclaration CRediT',
+histLabel:'États sauvegardés',btnClrHist:'Tout effacer',copyBtn:'Copier',copied:'Copié !',
+posLabel:'Position',corrLabel:'Auteur correspondant',posOf:'sur',firstL:'1er auteur',lastL:'Dernier auteur',authN:'Auteur n°',
+bCorr:'Correspondant',bErr:'Pas de rôle',bOver:'> 8 rôles',noRoles:'Aucun rôle attribué',rp:'rôles',
+sortPos:'Par position',sortCnt:'Par rôles',sortSc:'Par score',
+secSum:'Résumé',secMx:'Matrice de contributions',secSc:'Scores des auteurs',secCh:'Visualisations',
+secSt:'Déclaration CRediT',secJATS:'XML JATS 1.2',secUn:'Rôles non utilisés',secTL:'Chronologie des contributions',stFullName:'Noms complets',stInitials:'Initiales',
+ofUsed:'des rôles utilisés',rUsed:'Rôles utilisés',auths:'Auteurs',avail:'disponibles',
+mRoles:'Rôles',mScore:'Score',
+chBar:'Barres',chRad:'Radial',chDot:'Points',chHeat:'Carte de chaleur',chStk:'Empilé',chRdr:'Radar',
+btnPNG:'Exporter PNG',tlPhaseFlow:'Flux des phases de recherche',
+warnCorr:"Plus d'un auteur correspondant. La plupart des revues n'en autorisent qu'un seul.",
+errMand:"Au moins un auteur doit avoir « Rédaction – ébauche originale ».",
+sugPfx:'Envisagez aussi :',emptyS:"Aucun auteur. Saisissez un nom ci-dessus et appuyez sur Entrée.",
+vMiss:'Nécessitent au moins un rôle : ',vEmpty:"Ajoutez d'abord au moins un auteur.",mand:'Obligatoire',
+rlWarn:'a plus de 8 rôles attribués.',
+coNoVal:"Personne n'a le rôle Validation.",coNoSup:"Aucun dernier auteur ou auteur correspondant n'a Supervision ou Financement.",coNoWR:"Personne n'a Rédaction – révision et édition.",
+snapSaved:'État sauvegardé\u202f! Retrouvez-le dans l\u2019onglet Historique.',histEmpty:'Aucun état sauvegardé.',restore:'Restaurer',
+footAuthorsTitle:'Auteurs de cet outil',
+footBio:'Álvaro Cabezas-Clavijo et Rafael Repiso sont chercheurs dans les domaines de la Publication Scientifique et de l\'Évaluation de la Recherche.',
+footTechTitle:'Informations techniques',footEdition:'Première édition : 28 mars 2026',
+footContactTitle:'Contact et suggestions',footContactText:'Vos retours et suggestions sont les bienvenus.',
+discTitle:'Avertissement :',
+discText:"CRediT Profiler est fourni à des fins d'information et de recherche uniquement. Les auteurs de cet outil n'ont aucune affiliation avec CRediT ou NISO. Ils déclinent toute responsabilité pour les erreurs dans l'attribution des rôles ou les conséquences découlant de l'utilisation des résultats générés. CRediT est une norme NISO (ANSI/NISO Z39.104-2022) sous licence CC-BY 4.0.",
+catL:{ideation:'Conception',data:'Données et Recherche',analysis:'Analyse',management:'Gestion',governance:'Gouvernance',output:'Production'},
+rn:['Conceptualisation','Conservation des données','Analyse formelle','Acquisition de financement','Investigation','Méthodologie','Administration du projet','Ressources','Logiciel','Supervision','Validation','Visualisation','Rédaction – ébauche originale','Rédaction – révision et édition'],
+rd:["Idées ; formulation ou évolution des objectifs généraux de la recherche.",'Activités de gestion pour annoter, nettoyer et maintenir les données de recherche.',"Application de techniques statistiques, mathématiques ou computationnelles.",'Acquisition du soutien financier pour le projet.',"Mener le processus de recherche ; réaliser des expériences ou collecter des données.",'Développement ou conception de la méthodologie ; création de modèles.',"Responsabilité de gestion et de coordination de la planification de la recherche.",'Fourniture de matériaux, réactifs, instruments, ressources informatiques.',"Programmation, développement logiciel ; mise en œuvre du code et des algorithmes.",'Responsabilité de supervision et de leadership de la recherche.',"Vérification de la reproductibilité des résultats et autres produits de recherche.",'Préparation du travail publié ; visualisation des données.',"Préparation du travail publié ; rédaction de l'ébauche initiale.",'Révision critique du travail publié par les membres du groupe de recherche original.'],
+re:[['Hypothèse','Problème','Objectifs','Cadre théorique'],['Métadonnées','Nettoyage','Maintenance','Dépôts'],['Statistique','Modélisation','IA','Synthèse'],['Subventions','Financeurs','Budget','Contrats'],['Laboratoire','Terrain','Entretiens','Échantillons'],['Design','Modèles','Protocoles','Cadres'],['Tâches','Équipe','Suivi','Communication'],['Réactifs','Informatique','Instruments','Biologique'],['Code','Algorithmes','Tests','Bibliothèques'],['Thèses','Mentorat','Révision','Leadership'],['Réplication','Vérification','Reproductibilité','Audit'],['Graphiques','Infographies','Cartes','Visualisations'],['Manuscrit','Traduction','Structure','Sections'],['Révision','Édition','Commentaires','Post-publication']],
+},
+ar:{tabHome:'الأدوار ونظرة عامة',tabAssign:'تعيين المؤلفين',tabHistory:'السجل',
+hdsub:'تصنيف أدوار المساهمين · ANSI/NISO · CC-BY 4.0',
+aboutTitle:'ما هو CRediT Profiler؟',
+aboutP1:'<strong>CRediT</strong> هو معيار يضم <strong>14 دوراً للمساهمين</strong> لوصف المساهمات المحددة لكل مؤلف في مقالة بحثية. اعتُمد بوصفه ANSI/NISO Z39.104-2022 بموجب CC-BY 4.0.',
+aboutP2:'<strong>CRediT Profiler</strong> يتيح تعيين إعلانات CRediT وتصورها وتصديرها. أضف المؤلفين وعيّن أدواراً لكل منهم؛ أنشئ مصفوفات المساهمة؛ أنتج XML بتنسيق JATS 1.2؛ احسب درجات المساهمة الموزونة.',
+aboutP3:'استعرض الأدوار الـ 14 أدناه ثم انتقل إلى <strong>تعيين المؤلفين</strong> لبناء إعلان CRediT الخاص بك.',
+aboutTags:['14 دوراً موحداً','XML JATS 1.2','متوافق مع Crossref','تقييم موزون','6 لغات','مجاني ومفتوح'],
+exploreSection:'استكشاف أدوار CRediT الـ 14',
+searchPh:'ابحث عن الأدوار…',exLabel:'أمثلة على الأنشطة',
+ioLabel:'تصدير ومشاركة',btnExpJSON:'تصدير JSON',btnExpCSV:'تصدير CSV',btnShare:'مشاركة الرابط',btnSnap:'حفظ لقطة',btnPreview:'معاينة',
+addHeroLabel:'ابدأ هنا — أضف المؤلفين',addHeroSub:'أدخل اسم كل مؤلف واضغط Enter أو انقر على إضافة. ثم عيّن أدوار CRediT لكل مؤلف.',
+articleLabel:'معلومات المقالة',fieldTitle:'العنوان',titlePh:'عنوان المقالة',fieldJournal:'المجلة',journalPh:'اسم المجلة',
+weightsLabel:'أوزان الأدوار (درجة المساهمة)',btnResetW:'إعادة تعيين',fixedNote:'مثبت عند 10',wtsTotal:'المجموع:',wtOver:'أكثر من 100 — قلّل بعض الأوزان',wtUnder:'أقل من 100 — أضف مزيداً من الوزن',wtOk:'✓ المجموع = 100',
+rlLabel:'تنبيه حد الأدوار',rlCheck:'تحذير إذا كان للمؤلف أكثر من 8 أدوار (3 مؤلفين فأكثر فقط)',
+authorPh:'اسم المؤلف (مثال: محمد علي)',btnAdd:'+ إضافة مؤلف',btnClear:'مسح الكل',btnGen:'إنشاء النتائج ↗',
+btnClose:'✕ إغلاق',prevTitle:'إعلان CRediT',
+histLabel:'اللقطات المحفوظة',btnClrHist:'مسح الكل',copyBtn:'نسخ',copied:'تم النسخ!',
+posLabel:'الموقع',corrLabel:'مؤلف المراسلة',posOf:'من',firstL:'المؤلف الأول',lastL:'المؤلف الأخير',authN:'مؤلف #',
+bCorr:'مراسلة',bErr:'يحتاج دوراً',bOver:'> 8 أدوار',noRoles:'لم يُعيَّن أي دور',rp:'أدوار',
+sortPos:'حسب الموقع',sortCnt:'حسب الأدوار',sortSc:'حسب الدرجة',
+secSum:'ملخص',secMx:'مصفوفة المساهمات',secSc:'درجات المؤلفين',secCh:'التصورات البيانية',
+secSt:'إعلان CRediT',secJATS:'XML JATS 1.2',secUn:'الأدوار غير المستخدمة',secTL:'الجدول الزمني للمساهمات',stFullName:'الأسماء الكاملة',stInitials:'الأحرف الأولى',
+ofUsed:'من الأدوار المستخدمة',rUsed:'الأدوار المستخدمة',auths:'المؤلفون',avail:'متاح',
+mRoles:'الأدوار',mScore:'الدرجة',
+chBar:'أعمدة',chRad:'شعاعي',chDot:'نقطي',chHeat:'حراري',chStk:'مكدّس',chRdr:'راداري',
+btnPNG:'تصدير PNG',tlPhaseFlow:'تدفق مراحل البحث',
+warnCorr:'تم اكتشاف أكثر من مؤلف مراسلة. معظم المجلات تسمح بواحد فقط.',
+errMand:'يجب أن يكون لدى مؤلف واحد على الأقل "الكتابة – المسودة الأصلية".',
+sugPfx:'فكّر أيضاً في:',emptyS:'لا يوجد مؤلفون. أدخل اسماً أعلاه واضغط Enter.',
+vMiss:'يحتاجون إلى دور واحد على الأقل: ',vEmpty:'أضف مؤلفاً واحداً على الأقل أولاً.',mand:'مطلوب',
+rlWarn:'لديه أكثر من 8 أدوار معيّنة.',
+coNoVal:'لم يُعيَّن دور التحقق لأي مؤلف.',coNoSup:'لا يمتلك آخر مؤلف أو مؤلف المراسلة دور الإشراف أو الحصول على التمويل.',coNoWR:'لا يمتلك أي مؤلف دور الكتابة – المراجعة والتحرير.',
+snapSaved:'تم حفظ اللقطة! يمكنك العثور عليها في علامة التبويب السجل.',histEmpty:'لا توجد لقطات محفوظة.',restore:'استعادة',
+footAuthorsTitle:'مؤلفو هذه الأداة',footBio:'Álvaro Cabezas-Clavijo و Rafael Repiso باحثان في مجالَي النشر العلمي وتقييم البحث.',
+footTechTitle:'معلومات تقنية',footEdition:'الإصدار الأول: 28 مارس 2026',
+footContactTitle:'التواصل والاقتراحات',footContactText:'نرحب بملاحظاتكم واقتراحاتكم.',
+discTitle:'إخلاء المسؤولية:',
+discText:'تُقدَّم هذه الأداة لأغراض إعلامية وبحثية فحسب. لا تربط مؤلفي هذه الأداة أي علاقة بـ CRediT أو NISO. لا يتحملون أي مسؤولية عن الأخطاء في تعيين الأدوار أو عن أي عواقب ناجمة عن استخدام النتائج المُنشأة. CRediT معيار NISO (ANSI/NISO Z39.104-2022) مرخَّص بموجب CC-BY 4.0.',
+catL:{ideation:'المفاهيم',data:'البيانات والبحث',analysis:'التحليل',management:'الإدارة',governance:'الحوكمة',output:'المخرجات'},
+rn:['التصور المفاهيمي','إدارة البيانات','التحليل الرسمي','الحصول على التمويل','البحث والتحقيق','المنهجية','إدارة المشروع','الموارد','البرمجيات','الإشراف','التحقق','التصور البصري','الكتابة – المسودة الأصلية','الكتابة – المراجعة والتحرير'],
+rd:['أفكار؛ صياغة أو تطوير أهداف البحث الشاملة.','أنشطة إدارة البيانات للتعليق والتنظيف والصيانة.','تطبيق تقنيات إحصائية أو رياضية أو حسابية لتحليل بيانات الدراسة.','الحصول على الدعم المالي للمشروع.','إجراء عملية البحث والتحقيق؛ إجراء التجارب أو جمع البيانات.','تطوير أو تصميم المنهجية؛ إنشاء النماذج.','مسؤولية الإدارة والتنسيق لتخطيط النشاط البحثي وتنفيذه.','توفير مواد الدراسة والكواشف والأجهزة وموارد الحوسبة.','البرمجة وتطوير البرمجيات؛ تنفيذ الكود والخوارزميات.','مسؤولية الإشراف والقيادة لتخطيط النشاط البحثي وتنفيذه.','التحقق من قابلية تكرار النتائج والتجارب ومخرجات البحث.','إعداد وإنشاء و/أو عرض العمل المنشور؛ تصور البيانات.','إعداد العمل المنشور؛ كتابة المسودة الأولية.','المراجعة النقدية للعمل المنشور من قبل أعضاء مجموعة البحث.'],
+re:[['الفرضية','تعريف المشكلة','أهداف البحث','الإطار النظري'],['البيانات الوصفية','تنظيف البيانات','صيانة مجموعات البيانات','المستودعات'],['التحليل الإحصائي','النمذجة','التعلم الآلي','تركيب النتائج'],['المنح','الممولون','الميزانية','العقود'],['المختبر','الميدان','المقابلات','العينات'],['التصميم التجريبي','النماذج','البروتوكولات','الأطر'],['التخطيط','التنسيق','المتابعة','التواصل'],['الكواشف','الحوسبة','الأجهزة','العينات البيولوجية'],['الكود','الخوارزميات','الاختبار','المكتبات'],['الإشراف','التوجيه','المراجعة','القيادة'],['التكرار','التحقق','قابلية التكرار','التدقيق'],['الرسوم','الإنفوغرافيك','الخرائط','التصورات'],['المخطوطة','الترجمة','الهيكل','الأقسام'],['المراجعة النقدية','التحرير','التعليقات','ما بعد النشر']],
+}};
+
+// ─── STATE ───
+let lang='en',T=I18N.en;
+let authors=[],nextId=1,showRes=false,actChart='bar',actMetric='roles',mSort='position';
+let chartIs={},selRid=null,fCat='all',dragSrc=null;
+let snaps=[];try{snaps=JSON.parse(localStorage.getItem('cg_snaps')||'[]');}catch(e){}
+
+// ─── UTILS ───
+function wc(v){if(v>=9)return{b:'var(--wg)',t:'var(--wg)'};if(v>=7)return{b:'var(--wb)',t:'var(--wb)'};if(v>=5)return{b:'var(--wa)',t:'var(--wa)'};if(v>=3)return{b:'var(--wo)',t:'var(--wo)'};return{b:'var(--wr)',t:'var(--wr)'};}
+function ini(n){return n.trim().split(/\s+/).map(w=>w[0]||'').join('').toUpperCase().slice(0,2);}
+function pk(p,tot){return p===1?'first':p===tot?'last':'mid';}
+function pl(p,tot){return p===1?T.firstL:p===tot?T.lastL:T.authN+p;}
+function pb(k){return{first:'bf1',last:'bla',mid:'bmi'}[k];}
+function sc(a){return[...a.roles].reduce((s,r)=>s+(W[r]||0),0);}
+function mps(){return ROLES.reduce((s,r)=>s+(W[r.id]||0),0);}
+function abc(a){if(a.corresponding)return'#7F77DD';const k=pk(a.position,authors.length);return{first:'#534AB7',last:'#1D9E75',mid:'#888780'}[k];}
+function eh(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function ea(s){return s.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n');}
+function sibs(rid){const cat=ROLES.find(r=>r.id===rid)?.cat;return ROLES.filter(r=>r.cat===cat&&r.id!==rid);}
+function rlOn(){return document.getElementById('rl-on')?.checked&&authors.length>=3;}
+function dlFile(content,filename,mime){
+  const blob=new Blob([content],{type:mime});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=filename;a.style.display='none';
+  document.body.appendChild(a);a.click();
+  setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},200);
+}
+
+// ─── LANG ───
+function setLang(l,el){
+  lang=l;T=I18N[l];
+  document.querySelectorAll('.lb').forEach(b=>b.classList.remove('on'));el.classList.add('on');
+  document.documentElement.lang=l;
+  document.body.className=l==='zh'?'lzh':l==='ar'?'lar':l==='pt'?'lpt':l==='fr'?'lfr':'';
+  document.dir=l==='ar'?'rtl':'ltr';
+  applyI18N();renderAll();
+}
+function applyI18N(){
+  document.getElementById('hdsub').textContent=T.hdsub;
+  document.querySelectorAll('[data-i]').forEach(el=>{const k=el.dataset.i;if(T[k]!==undefined)el.textContent=T[k];});
+  document.querySelectorAll('[data-i-ph]').forEach(el=>{const k=el.dataset.iPh;if(T[k])el.placeholder=T[k];});
+  renderAbout();
+  const fb=document.querySelector('[data-i="footBio"]');if(fb)fb.textContent=T.footBio;
+  const dt=document.querySelector('[data-i="discText"]');if(dt)dt.textContent=T.discText;
+}
+function renderAll(){buildFR();renderGrid();renderWP();renderAuthors();renderHistory();if(showRes)renderResults();}
+
+// ─── ABOUT ───
+function renderAbout(){
+  const box=document.getElementById('about-box');if(!box)return;
+  box.innerHTML=`<h2>${T.aboutTitle}</h2><p>${T.aboutP1}</p><p>${T.aboutP2}</p><p>${T.aboutP3}</p><div class="about-tags">${T.aboutTags.map(t=>`<span class="atag">${t}</span>`).join('')}</div>`;
+}
+
+// ─── PANEL COLLAPSE ───
+function togglePanel(id){
+  const pb=document.getElementById('pb-'+id);const pc=document.getElementById('pc-'+id);
+  if(!pb)return;const open=pb.classList.contains('open');
+  pb.classList.toggle('open',!open);
+  if(pc)pc.style.transform=open?'rotate(0)':'rotate(180deg)';
+}
+function updateArtHint(){
+  const t=document.getElementById('art-title')?.value.trim()||'';
+  const j=document.getElementById('art-journal')?.value.trim()||'';
+  const d=document.getElementById('art-doi')?.value.trim()||'';
+  const s=[t,j,d].filter(Boolean);
+  const h=document.getElementById('art-hint');if(h)h.textContent=s.length?s[0].slice(0,40)+(s[0].length>40?'…':''):'';
+}
+
+// ─── TABS ───
+function switchTab(tab,el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));el.classList.add('on');
+  ['home','assign','history'].forEach(p=>document.getElementById('pane-'+p).style.display=p===tab?'':'none');
+  if(tab==='history')renderHistory();
+}
+
+// ─── EXPLORE ───
+function buildFR(){
+  const allLbl=lang==='es'?'Todos':lang==='zh'?'全部':lang==='pt'?'Todos':lang==='fr'?'Tous':lang==='ar'?'الكل':'All';
+  const cats=[['all',allLbl],...CATS.map(c=>[c,T.catL[c]])];
+  document.getElementById('filter-row').innerHTML=cats.map(([v,lbl])=>`<button class="chip${fCat===v?' on':''}" onclick="setFilt('${v}',this)">${lbl}</button>`).join('');
+}
+function setFilt(f,el){fCat=f;document.querySelectorAll('#filter-row .chip').forEach(c=>c.classList.remove('on'));el.classList.add('on');closeDetail();renderGrid();}
+function closeDetail(){selRid=null;document.getElementById('dbox').classList.add('h');renderGrid();}
+function openDetail(r){
+  selRid=r.id;const m=FIXED.has(r.id);
+  document.getElementById('dbtitle').innerHTML=T.rn[r.id-1]+(m?` <span class="mpill">${T.mand}</span>`:'');
+  document.getElementById('dbdef').textContent=T.rd[r.id-1];
+  document.getElementById('dbpills').innerHTML=T.re[r.id-1].map(e=>`<span class="ep">${e}</span>`).join('');
+  document.getElementById('dbox').classList.remove('h');renderGrid();
+}
+function renderGrid(){
+  const q=(document.getElementById('search').value||'').toLowerCase();
+  const fl=ROLES.filter(r=>(fCat==='all'||r.cat===fCat)&&(!q||T.rn[r.id-1].toLowerCase().includes(q)||T.rd[r.id-1].toLowerCase().includes(q)));
+  const g=document.getElementById('roles-grid');
+  if(!fl.length){g.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:2rem;font-size:13px;color:var(--ink3)">${lang==='ar'?'لم يتم العثور على أدوار.':lang==='zh'?'未找到角色。':lang==='es'?'No se encontraron roles.':lang==='pt'?'Nenhuma função encontrada.':lang==='fr'?'Aucun rôle trouvé.':'No roles found.'}</div>`;return;}
+  g.innerHTML=fl.map(r=>{const c=CM[r.cat];const s=selRid===r.id;const m=FIXED.has(r.id);return`<div class="rc${s?' sel':''}${m?' mand':''}" onclick="selRid===${r.id}?closeDetail():openDetail(ROLES.find(x=>x.id===${r.id}))"><div class="rcn2">R${String(r.id).padStart(2,'0')}</div><div class="rcn">${T.rn[r.id-1]}</div><span class="cpill" style="background:${c.bg};color:${c.t}">${T.catL[r.cat]}</span>${m?`<span class="mpill">${T.mand}</span>`:''}</div>`;}).join('');
+}
+
+// ─── WEIGHTS ───
+function updateWTotal(){
+  const tot=Object.values(W).reduce((s,v)=>s+v,0);
+  const el=document.getElementById('wts-total');
+  const ind=document.getElementById('wts-indicator');
+  if(el)el.textContent=tot;
+  if(ind){
+    if(tot===100){el.style.color='var(--wg)';ind.style.display='none';}
+    else if(tot>100){el.style.color='var(--er)';ind.style.color='var(--er)';ind.style.display='';ind.textContent=T.wtOver||'> 100';}
+    else{el.style.color='var(--wa)';ind.style.color='var(--wa)';ind.style.display='';ind.textContent=T.wtUnder||'< 100';}
+  }
+}
+function renderWP(){
+  document.getElementById('wgrid').innerHTML=ROLES.map(r=>{
+    const v=W[r.id];const c=wc(v);
+    const pct=(v-1)/9*100;
+    return`<div class="wr2"><span class="wn" title="${T.rn[r.id-1]}">${T.rn[r.id-1]}</span><input type="range" class="wsl" id="ws${r.id}" min="1" max="10" step="1" value="${v}" style="background:linear-gradient(to right,${c.b} 0%,${c.b} ${pct}%,var(--bd2) ${pct}%,var(--bd2) 100%)" oninput="setW(${r.id},+this.value,this)"><span class="wv" id="wv${r.id}" style="color:${c.t}">${v}</span></div>`;
+  }).join('');
+  updateWTotal();
+}
+function setW(id,v,el){W[id]=v;const c=wc(v);el.style.background=`linear-gradient(to right,${c.b} 0%,${c.b} ${(v-1)/9*100}%,var(--bd2) ${(v-1)/9*100}%,var(--bd2) 100%)`;const ve=document.getElementById('wv'+id);if(ve){ve.textContent=v;ve.style.color=c.t;}updateWTotal();if(showRes)renderResults();}
+function resetW(){W={...DW};renderWP();updateWTotal();if(showRes)renderResults();}
+
+// ─── AUTHORS ───
+function addAuthor(){
+  const inp=document.getElementById('new-author');const name=inp.value.trim();
+  if(!name){inp.focus();return;}
+  if(authors.find(a=>a.name.toLowerCase()===name.toLowerCase())){showV(lang==='ar'?'يوجد مؤلف بهذا الاسم.':lang==='zh'?'已存在同名作者。':lang==='es'?'Ya existe un autor con ese nombre.':lang==='pt'?'Já existe um autor com esse nome.':lang==='fr'?'Un auteur avec ce nom existe déjà.':'An author with that name already exists.');return;}
+  authors.push({id:nextId++,name,roles:new Set(),position:authors.length+1,corresponding:false,editing:false});
+  inp.value='';inp.focus();hideV();
+  // Show generate button once we have authors
+  const gr=document.getElementById('gen-row');if(gr)gr.style.display='';
+  renderAuthors();
+}
+function remAuthor(id){authors=authors.filter(a=>a.id!==id);if(!authors.length){const gr=document.getElementById('gen-row');if(gr)gr.style.display='none';}hideRes();renderAuthors();}
+function setPos(id,v){const a=authors.find(x=>x.id===id);if(a)a.position=+v;hideRes();renderAuthors();}
+function setCorr(id,v){authors.forEach(a=>{if(a.id===id)a.corresponding=v;});chkCorr();hideRes();renderAuthors();}
+function togRole(aid,rid){const a=authors.find(x=>x.id===aid);if(!a)return;a.roles.has(rid)?a.roles.delete(rid):a.roles.add(rid);hideRes();renderAuthors();}
+function startEdit(id){const a=authors.find(x=>x.id===id);if(a)a.editing=true;renderAuthors();setTimeout(()=>document.getElementById('ae'+id)?.focus(),50);}
+function saveEdit(id){const inp=document.getElementById('ae'+id);if(!inp)return;const v=inp.value.trim();const a=authors.find(x=>x.id===id);if(a){if(v&&!authors.find(b=>b.id!==id&&b.name.toLowerCase()===v.toLowerCase()))a.name=v;a.editing=false;}renderAuthors();}
+function chkCorr(){const wm=document.getElementById('wmsg');const cc=authors.filter(a=>a.corresponding).length;if(cc>1){wm.textContent=T.warnCorr;wm.classList.add('show');}else wm.classList.remove('show');}
+function getAlerts(){
+  if(!authors.length)return[];const tot=authors.length;const al=[];
+  if(!authors.some(a=>a.roles.has(11)))al.push({w:true,m:T.coNoVal});
+  const pi=authors.filter(a=>a.corresponding||(a.position===tot&&tot>1));
+  if(pi.length&&!pi.some(a=>a.roles.has(10)||a.roles.has(4)))al.push({w:true,m:T.coNoSup});
+  if(!authors.some(a=>a.roles.has(14)))al.push({w:false,m:T.coNoWR});
+  if(rlOn())authors.filter(a=>a.roles.size>8).forEach(a=>al.push({w:true,m:`${a.name}: ${T.rlWarn}`}));
+  return al;
+}
+function renderCAl(){document.getElementById('calerts').innerHTML=getAlerts().map(al=>`<div class="ca ${al.w?'caw':'cai'}"><span>${al.w?'⚠':'ℹ'}</span><span>${al.m}</span></div>`).join('');}
+function renderAuthors(){
+  chkCorr();renderCAl();
+  const tot=authors.length;const c=document.getElementById('astack');
+  if(!authors.length){c.innerHTML=`<div class="es">${T.emptyS}</div>`;return;}
+  const sorted=[...authors].sort((a,b)=>a.position-b.position);
+  c.innerHTML=sorted.map(a=>{
+    const k=pk(a.position,tot);const hasE=showRes&&a.roles.size===0;const over=rlOn()&&a.roles.size>8;
+    const opts=Array.from({length:tot},(_,i)=>i+1).map(n=>`<option value="${n}"${a.position===n?'selected':''}>${n}${n===1?' – '+T.firstL:n===tot?' – '+T.lastL:''}</option>`).join('');
+    const nm=a.editing?`<input class="abne" id="ae${a.id}" value="${a.name}" onblur="saveEdit(${a.id})" onkeydown="if(event.key==='Enter'||event.key==='Escape')saveEdit(${a.id})">`:
+      `<span class="abn">${a.name}${a.corresponding?` <span style="color:var(--co)">*</span>`:''}</span>`;
+    return`<div class="ab${a.corresponding?' ico':''}${hasE?' err':''}" id="ab${a.id}" draggable="true" ondragstart="dStart(${a.id})" ondragover="dOver(event,${a.id})" ondrop="dDrop(event,${a.id})" ondragleave="dLeave(${a.id})">
+      <div class="abh">
+        <div class="abm">
+          <span class="dh">⠿</span>
+          <div class="av${a.corresponding?' co':''}">${ini(a.name)}</div>
+          <div>${nm}<div class="abct">${a.roles.size===0?T.noRoles:a.roles.size+' '+T.rp}</div></div>
+          <span class="bdg ${pb(k)}">${pl(a.position,tot)}</span>
+          ${a.corresponding?`<span class="bdg bco">* ${T.bCorr}</span>`:''}
+          ${over?`<span class="bdg bwn">${T.bOver}</span>`:''}
+          ${hasE?`<span class="bdg ber">${T.bErr}</span>`:''}
+        </div>
+        <div style="display:flex;gap:5px"><button class="bico ed" onclick="startEdit(${a.id})">✎</button><button class="bico" onclick="remAuthor(${a.id})">✕</button></div>
+      </div>
+      <div class="abc">
+        <div class="cg"><span class="cl2">${T.posLabel}:</span><select class="cs" onchange="setPos(${a.id},this.value)">${opts}</select><span style="font-size:11px;color:var(--ink3)">${T.posOf} ${tot}</span></div>
+        <label class="crl"><input type="checkbox" ${a.corresponding?'checked':''} onchange="setCorr(${a.id},this.checked)">${T.corrLabel}</label>
+      </div>
+      <div class="rgsm">
+        ${ROLES.map(r=>{const on=a.roles.has(r.id);const mr=FIXED.has(r.id);const sb=sibs(r.id).filter(s=>!a.roles.has(s.id));const tip=sb.length?`${T.sugPfx} ${sb.map(s=>T.rn[s.id-1]).join(', ')}`:null;
+          return`<div class="rtw"><button class="rt${on?' on':''}${mr?' mr':''}" onclick="togRole(${a.id},${r.id})"><div class="rtb"><span class="rttk">✓</span></div><span class="rtl">${T.rn[r.id-1]}${mr?' ●':''}</span></button>${on&&tip?`<div class="rtt">${tip}</div>`:''}</div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+function dStart(id){dragSrc=id;}
+function dOver(e,id){e.preventDefault();if(id!==dragSrc)document.getElementById('ab'+id)?.classList.add('dov');}
+function dLeave(id){document.getElementById('ab'+id)?.classList.remove('dov');}
+function dDrop(e,tid){e.preventDefault();document.getElementById('ab'+tid)?.classList.remove('dov');if(dragSrc===tid)return;const s=authors.find(a=>a.id===dragSrc),t=authors.find(a=>a.id===tid);if(!s||!t)return;const sp=s.position,tp=t.position;s.position=tp;t.position=sp;hideRes();renderAuthors();}
+function showV(m){const e=document.getElementById('vmsg');e.textContent=m;e.classList.add('show');}
+function hideV(){document.getElementById('vmsg').classList.remove('show');}
+function submit(){
+  showRes=true;
+  if(!authors.length){showV(T.vEmpty);return;}
+  const miss=authors.filter(a=>a.roles.size===0);
+  if(miss.length){showV(T.vMiss+miss.map(a=>a.name).join(', '));renderAuthors();return;}
+  if(!authors.some(a=>a.roles.has(MAND))){showV(T.errMand);return;}
+  hideV();renderAuthors();renderResults();
+}
+function clearAll(){
+  authors=[];showRes=false;hideV();hideRes();renderAuthors();
+  ['art-title','art-doi','art-journal'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  updateArtHint();
+  const gr=document.getElementById('gen-row');if(gr)gr.style.display='none';
+}
+function hideRes(){document.getElementById('rw').innerHTML='';showRes=false;dCharts();}
+
+// ─── HISTORY ───
+function showToast(msg){
+  let t=document.getElementById('cg-toast');
+  if(!t){t=document.createElement('div');t.id='cg-toast';t.style.cssText='position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 22px;border-radius:8px;font-size:13px;font-weight:500;font-family:inherit;z-index:999;box-shadow:0 4px 16px rgba(0,0,0,.18);transition:opacity .3s;pointer-events:none;max-width:90vw;text-align:center;';document.body.appendChild(t);}
+  t.textContent=msg;t.style.opacity='1';
+  clearTimeout(t._tid);t._tid=setTimeout(()=>{t.style.opacity='0';},3200);
+}
+function saveSnap(){
+  if(!authors.length)return;
+  const title=document.getElementById('art-title')?.value.trim()||'';
+  const snap={id:Date.now(),title:title||('Snapshot '+new Date().toLocaleString()),date:new Date().toISOString(),lang,W:{...W},art:{t:document.getElementById('art-title')?.value||'',d:document.getElementById('art-doi')?.value||'',j:document.getElementById('art-journal')?.value||''},authors:authors.map(a=>({...a,roles:[...a.roles],editing:undefined}))};
+  snaps.unshift(snap);if(snaps.length>20)snaps=snaps.slice(0,20);
+  try{localStorage.setItem('cg_snaps',JSON.stringify(snaps));}catch(e){}
+  renderHistory();showToast(T.snapSaved);
+}
+function restoreSnap(id){
+  const s=snaps.find(x=>x.id===id);if(!s)return;
+  if(s.W)W={...DW,...s.W};
+  const at=document.getElementById('art-title');if(at)at.value=s.art?.t||'';
+  const ad=document.getElementById('art-doi');if(ad)ad.value=s.art?.d||'';
+  const aj=document.getElementById('art-journal');if(aj)aj.value=s.art?.j||'';
+  authors=s.authors.map(a=>({...a,roles:new Set(a.roles),editing:false}));
+  nextId=authors.reduce((m,a)=>Math.max(m,a.id),0)+1;
+  if(authors.length){const gr=document.getElementById('gen-row');if(gr)gr.style.display='';}
+  hideRes();updateArtHint();renderWP();renderAuthors();
+  switchTab('assign',document.querySelectorAll('.tab')[1]);
+}
+function delSnap(id){snaps=snaps.filter(s=>s.id!==id);try{localStorage.setItem('cg_snaps',JSON.stringify(snaps));}catch(e){}renderHistory();}
+function clearHistory(){snaps=[];try{localStorage.removeItem('cg_snaps');}catch(e){}renderHistory();}
+function renderHistory(){
+  const c=document.getElementById('hlist');
+  if(!snaps.length){c.innerHTML=`<div class="es">${T.histEmpty}</div>`;return;}
+  c.innerHTML=snaps.map(s=>`<div class="hi"><div><div class="him">${s.title}</div><div class="hid">${new Date(s.date).toLocaleString()} · ${s.authors.length} ${T.auths}</div></div><div class="hia"><button class="btn bto bsm" onclick="restoreSnap(${s.id})">${T.restore}</button><button class="btn btg bsm" onclick="delSnap(${s.id})">✕</button></div></div>`).join('');
+}
+
+// ─── SHARE URL ───
+function shareURL(){
+  const state={v:4,lang,W,art:{t:document.getElementById('art-title')?.value||'',d:document.getElementById('art-doi')?.value||'',j:document.getElementById('art-journal')?.value||''},a:authors.map(a=>({i:a.id,n:a.name,r:[...a.roles],p:a.position,c:a.corresponding?1:0}))};
+  try{
+    const enc=btoa(unescape(encodeURIComponent(JSON.stringify(state))));
+    const url=window.location.href.split('?')[0]+'?d='+enc;
+    const su=document.getElementById('share-url');if(su)su.textContent=url;
+    const sa=document.getElementById('share-area');if(sa)sa.style.display='';
+    const pb=document.getElementById('pb-io');if(pb&&!pb.classList.contains('open'))togglePanel('io');
+  }catch(e){showToast('Error generating URL');}
+}
+function copyShareURL(){
+  const su=document.getElementById('share-url');if(!su)return;
+  navigator.clipboard.writeText(su.textContent).then(()=>{const b=document.getElementById('csh');if(b){b.textContent=T.copied;setTimeout(()=>{b.textContent=T.copyBtn;},2000);}});
+}
+function loadFromURL(){
+  try{
+    const p=new URLSearchParams(window.location.search);const d=p.get('d');if(!d)return;
+    const s=JSON.parse(decodeURIComponent(escape(atob(d))));
+    if(s.art){const at=document.getElementById('art-title');if(at)at.value=s.art.t||'';const ad=document.getElementById('art-doi');if(ad)ad.value=s.art.d||'';const aj=document.getElementById('art-journal');if(aj)aj.value=s.art.j||'';}
+    if(s.W)W={...DW,...s.W};
+    if(s.a){authors=s.a.map(a=>({id:a.i,name:a.n,roles:new Set(a.r),position:a.p,corresponding:!!a.c,editing:false}));nextId=authors.reduce((m,a)=>Math.max(m,a.id),0)+1;}
+    updateArtHint();renderWP();renderAuthors();
+    if(authors.length){const gr=document.getElementById('gen-row');if(gr)gr.style.display='';switchTab('assign',document.querySelectorAll('.tab')[1]);}
+  }catch(e){console.warn('Invalid URL state',e);}
+}
+
+// ─── RESULTS ───
+function dCharts(){Object.values(chartIs).forEach(c=>{try{c.destroy();}catch(e){}});chartIs={};}
+function getSorted(){
+  let arr=[...authors].sort((a,b)=>a.position-b.position);
+  if(mSort==='count')arr=[...arr].sort((a,b)=>b.roles.size-a.roles.size);
+  if(mSort==='score')arr=[...arr].sort((a,b)=>sc(b)-sc(a));
+  return arr;
+}
+function renderResults(){
+  const sorted=getSorted();const tot=authors.length;
+  const usedIds=new Set(authors.flatMap(a=>[...a.roles]));
+  const unused=ROLES.filter(r=>!usedIds.has(r.id));
+  const maxR=Math.max(...authors.map(a=>a.roles.size),1);
+  const maxSc=Math.max(...authors.map(a=>sc(a)),1);
+  const usedCount=usedIds.size||1;
+  let html='';
+
+  // Summary — % over roles used
+  html+=`<div class="rs"><div class="rh"><span class="slbl">${T.secSum}</span></div><div class="mgrid">`;
+  sorted.forEach(a=>{
+    const k=pk(a.position,tot);const pctOfUsed=Math.round(a.roles.size/usedCount*100);
+    html+=`<div class="mc${a.corresponding?' ico':''}"><div class="mcl">${a.name}${a.corresponding?` <span style="color:var(--co)">*</span>`:''}</div><div class="mcv">${a.roles.size}</div><div class="mcs">${pctOfUsed}% ${T.ofUsed}</div><div class="mct"><span class="bdg ${pb(k)}" style="font-size:10px;padding:1px 6px">#${a.position} ${pl(a.position,tot)}</span>${a.corresponding?`<span class="bdg bco" style="font-size:10px;padding:1px 6px">*</span>`:''}</div></div>`;
+  });
+  html+=`<div class="mc"><div class="mcl">${T.rUsed}</div><div class="mcv">${usedIds.size}</div><div class="mcs">/ 14 ${T.avail}</div></div></div></div>`;
+
+  // Coherence alerts
+  const cal=getAlerts();
+  if(cal.length)html+=`<div class="rs"><div class="calerts">${cal.map(al=>`<div class="ca ${al.w?'caw':'cai'}"><span>${al.w?'⚠':'ℹ'}</span><span>${al.m}</span></div>`).join('')}</div></div>`;
+
+  // Scores — no %
+  html+=`<div class="rs"><div class="rh"><span class="slbl">${T.secSc}</span><span style="font-size:11px;color:var(--ink3)">max = ${mps()}</span></div><div class="sgrid">`;
+  [...authors].sort((a,b)=>sc(b)-sc(a)).forEach((a,i)=>{const sv=sc(a);const pct=Math.round(sv/maxSc*100);const c=wc(Math.round(sv/maxSc*10));
+    html+=`<div class="sc${i===0?' top':''}"><div class="scr">#${i+1}</div><div class="scn">${a.name}${a.corresponding?` <span style="color:var(--co)">*</span>`:''}</div><div class="scv">${sv}</div><div class="scbw"><div class="scbt"><div class="scbf" style="width:${pct}%;background:${c.b}"></div></div></div><div style="margin-top:5px"><span class="bdg ${pb(pk(a.position,tot))}" style="font-size:10px;padding:1px 6px">${pl(a.position,tot)}</span>${a.corresponding?`<span class="bdg bco" style="font-size:10px;padding:1px 6px;margin-left:4px">*</span>`:''}</div></div>`;});
+  html+=`</div></div>`;
+
+  // Matrix
+  html+=`<div class="rs"><div class="rh"><span class="slbl">${T.secMx}</span><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><div class="srow"><button class="sbt${mSort==='position'?' on':''}" onclick="setSort('position',this)">${T.sortPos}</button><button class="sbt${mSort==='count'?' on':''}" onclick="setSort('count',this)">${T.sortCnt}</button><button class="sbt${mSort==='score'?' on':''}" onclick="setSort('score',this)">${T.sortSc}</button></div><button class="btn bto bsm" onclick="expPNG()">${T.btnPNG}</button></div></div>`;
+  html+=`<div class="catleg">`;CATS.forEach(cat=>{const c=CM[cat];html+=`<div class="li"><div class="lsw" style="background:${c.bg};border:1px solid ${c.t}55"></div><span>${T.catL[cat]}</span></div>`;});html+=`</div>`;
+  html+=`<div class="mwrap" id="mx-exp"><table class="mtbl"><thead><tr><th class="ca">${T.auths}</th>`;
+  ROLES.forEach(r=>{const c=CM[r.cat];const m=FIXED.has(r.id);html+=`<th class="${m?'mth':''}" style="color:${m?'var(--er)':c.t}">${T.rn[r.id-1]}${m?' ●':''}</th>`;});
+  html+=`<th class="csm">${T.mRoles}</th><th class="csm">${T.mScore}</th></tr></thead><tbody>`;
+  sorted.forEach(a=>{const k=pk(a.position,tot);const sv=sc(a);const rp2=Math.round(a.roles.size/maxR*100);const sp=Math.round(sv/maxSc*100);const c=wc(Math.round(sv/maxSc*10));
+    html+=`<tr><td class="tda${a.corresponding?' cor':''}"><div class="tdai"><div class="tdav${a.corresponding?' co':''}">${ini(a.name)}</div><div><div class="tdn">${a.name}${a.corresponding?` <span style="color:var(--co)">*</span>`:''}</div><span class="tdp bdg ${pb(k)}">#${a.position} ${pl(a.position,tot)}</span></div></div></td>`;
+    ROLES.forEach(r=>{const cm=CM[r.cat];if(a.roles.has(r.id)){html+=`<td class="tdr"><div class="con" style="background:${cm.bg}"><span class="tip">${T.rn[r.id-1]}</span><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 6.5L5 9.5L10 3" stroke="${cm.t}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div></td>`;}else{html+=`<td class="tdr"><div class="coff"></div></td>`;}});
+    html+=`<td class="tdsm"><div class="ci"><span class="cn">${a.roles.size}</span><div class="bt"><div class="bf" style="width:${rp2}%;background:${abc(a)}"></div></div></div></td>`;
+    html+=`<td class="tdsm"><div class="ci"><span class="cn">${sv}</span><div class="bt"><div class="bf" style="width:${sp}%;background:${c.b}"></div></div></div></td></tr>`;
+  });
+  html+=`</tbody></table></div></div>`;
+
+  // Timeline — Gantt
+  html+=buildTL(sorted,tot);
+
+  // Charts
+  html+=`<div class="rs"><div class="rh"><span class="slbl">${T.secCh}</span></div>
+    <div class="mtog"><button class="mtb${actMetric==='roles'?' on':''}" onclick="setMet('roles',this)">${T.mRoles}</button><button class="mtb${actMetric==='score'?' on':''}" onclick="setMet('score',this)">${T.mScore}</button></div>
+    <div class="cpick">${[['bar',T.chBar],['rad',T.chRad],['dot',T.chDot],['heat',T.chHeat],['stk',T.chStk],['rdr',T.chRdr]].map(([t,lbl])=>`<button class="cp${actChart===t?' on':''}" onclick="selChart('${t}',this)">${lbl}</button>`).join('')}</div>
+    <div id="chart-area"></div></div>`;
+
+  // Statement — two versions: full names and initials
+  const stmt=buildStmt(sorted);
+  const stmtI=buildStmtInitials(sorted);
+  html+=`<div class="rs"><div class="slbl">${T.secSt}</div>
+    <div style="display:flex;gap:0;margin-bottom:10px;border-bottom:0.5px solid var(--bd2)">
+      <button id="stmt-tab-full" class="tab on" style="font-size:12px;padding:6px 14px" onclick="switchStmt('full')">${T.stFullName}</button>
+      <button id="stmt-tab-init" class="tab" style="font-size:12px;padding:6px 14px" onclick="switchStmt('init')">${T.stInitials}</button>
+    </div>
+    <div id="stmt-full" class="stbox">${stmt.replace(/\n/g,'<br>')}</div>
+    <div id="stmt-init" class="stbox" style="display:none">${stmtI.replace(/\n/g,'<br>')}</div>
+    <div class="crow">
+      <button class="btn bto bsm" id="cst" onclick="copyT('cst','${ea(stmt)}')">${T.copyBtn}</button>
+    </div>
+  </div>`;
+
+  // JATS — collapsed
+  const jats=buildJATS(sorted);
+  html+=`<div class="rs"><div class="panel" style="padding:12px 16px">
+    <div class="ph" onclick="const pb=this.nextElementSibling;const pc=this.querySelector('.pc');pb.classList.toggle('open');pc.style.transform=pb.classList.contains('open')?'rotate(180deg)':'rotate(0)'">
+      <div class="ph-l"><span class="slbl" style="margin:0">${T.secJATS}</span></div>
+      <span class="pc" style="transform:rotate(0)">▼</span>
+    </div>
+    <div class="pb">
+      <div class="jbox" style="margin-top:12px">${eh(jats)}</div>
+      <div class="crow"><button class="btn bto bsm" id="cjt" onclick="copyT('cjt','${ea(jats)}')">${T.copyBtn}</button></div>
+    </div>
+  </div></div>`;
+
+  if(unused.length)html+=`<div class="rs"><div class="slbl">${T.secUn} (${unused.length})</div><div class="upills">${unused.map(r=>`<span class="upill">${T.rn[r.id-1]}</span>`).join('')}</div></div>`;
+
+  document.getElementById('rw').innerHTML=html;
+  renderChart();
+  document.getElementById('rw').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+// ─── GANTT TIMELINE ───
+function buildTL(sorted,tot){
+  const maxInCat=Object.fromEntries(CATS.map(cat=>[cat,Math.max(...sorted.map(a=>ROLES.filter(r=>r.cat===cat&&a.roles.has(r.id)).length),1)]));
+  let h=`<div class="rs"><div class="slbl">${T.secTL}</div>`;
+  h+=`<div style="display:flex;gap:2px;margin-bottom:8px;padding-left:160px">`;
+  CATS.forEach(cat=>{const c=CM[cat];h+=`<div style="flex:1;text-align:center;padding:5px 3px;background:${c.bg};border-radius:4px;font-size:10px;font-weight:500;color:${c.t};white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${T.catL[cat]}">${T.catL[cat]}</div>`;});
+  h+=`</div>`;
+  sorted.forEach((a,ai)=>{
+    h+=`<div style="display:flex;align-items:center;gap:2px;margin-bottom:${ai<sorted.length-1?6:0}px">`;
+    h+=`<div style="width:156px;flex-shrink:0;padding-right:8px;text-align:right"><div style="font-size:12px;font-weight:500;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.name}${a.corresponding?` <span style="color:var(--co)">*</span>`:''}</div><div style="font-size:10px;color:var(--ink3)">${pl(a.position,tot)}</div></div>`;
+    CATS.forEach(cat=>{
+      const c=CM[cat];const rcat=ROLES.filter(r=>r.cat===cat&&a.roles.has(r.id));const cnt=rcat.length;
+      const fillPct=cnt>0?Math.round(cnt/maxInCat[cat]*100):0;
+      if(cnt>0){h+=`<div style="flex:1;height:32px;background:${c.bg}33;border-radius:4px;position:relative;overflow:hidden;border:0.5px solid ${c.bg}" title="${rcat.map(r=>T.rn[r.id-1]).join(', ')}"><div style="position:absolute;left:0;top:0;height:100%;width:${fillPct}%;background:${c.bg};border-radius:4px;min-width:20px"></div><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:${c.t}">${cnt}</div></div>`;}
+      else{h+=`<div style="flex:1;height:32px;background:var(--bg2);border-radius:4px;border:0.5px dashed var(--bd)"></div>`;}
+    });
+    h+=`</div>`;
+  });
+  h+=`<div style="display:flex;align-items:center;gap:6px;margin-top:10px;padding-left:160px"><span style="font-size:11px;color:var(--ink3)">${T.tlPhaseFlow}</span><div style="flex:1;height:1px;background:linear-gradient(to right,var(--bd2),var(--ink3));position:relative"><div style="position:absolute;right:-2px;top:-5px;color:var(--ink3);font-size:12px">▶</div></div></div>`;
+  h+=`</div>`;return h;
+}
+
+function setSort(s,el){mSort=s;document.querySelectorAll('.sbt').forEach(b=>b.classList.remove('on'));el.classList.add('on');renderResults();}
+function setMet(m,el){actMetric=m;document.querySelectorAll('.mtb').forEach(b=>b.classList.remove('on'));el.classList.add('on');dCharts();renderChart();}
+function selChart(t,el){actChart=t;document.querySelectorAll('.cp').forEach(b=>b.classList.remove('on'));el.classList.add('on');dCharts();renderChart();}
+
+// ─── CHARTS ───
+function cData(){return getSorted().map(a=>({name:a.name+(a.corresponding?' *':''),cnt:a.roles.size,score:sc(a),val:actMetric==='score'?sc(a):a.roles.size,col:abc(a),catC:Object.fromEntries(CATS.map(cat=>[cat,[...a.roles].filter(rid=>ROLES.find(r=>r.id===rid).cat===cat).length])),catS:Object.fromEntries(CATS.map(cat=>[cat,[...a.roles].filter(rid=>ROLES.find(r=>r.id===rid).cat===cat).reduce((s,rid)=>s+(W[rid]||0),0)])),_a:a}));}
+function mMax(){return actMetric==='score'?mps():14;}
+function cleg(){return`<div class="cleg">${[['#7F77DD',T.bCorr],['#534AB7',T.firstL],['#1D9E75',T.lastL],['#888780',lang==='ar'?'مؤلف وسط':lang==='zh'?'中间作者':lang==='es'?'Intermedio':lang==='pt'?'Intermédio':lang==='fr'?'Intermédiaire':'Middle']].map(([c,l])=>`<span class="cli"><span class="clsw" style="background:${c}"></span>${l}</span>`).join('')}</div>`;}
+function renderChart(){const area=document.getElementById('chart-area');if(!area)return;const data=cData();dCharts();({bar:rBar,rad:rRad,dot:rDot,heat:rHeat,stk:rStk,rdr:rRdr})[actChart]?.(area,data);}
+function rBar(area,data){const h=Math.max(180,data.length*52+80);area.innerHTML=`<div style="position:relative;width:100%;height:${h}px"><canvas id="ch1"></canvas></div>${cleg()}`;chartIs.c=new Chart(document.getElementById('ch1'),{type:'bar',data:{labels:data.map(d=>d.name),datasets:[{data:data.map(d=>d.val),backgroundColor:data.map(d=>d.col),borderRadius:4,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw}`}}},scales:{x:{max:mMax(),grid:{color:'rgba(128,128,128,.08)'},ticks:{font:{size:11}}},y:{ticks:{font:{size:12}}}}}});}
+function rRad(area,data){area.innerHTML=`<div style="position:relative;width:100%;max-width:400px;height:340px;margin:0 auto"><canvas id="ch1"></canvas></div>`;chartIs.c=new Chart(document.getElementById('ch1'),{type:'polarArea',data:{labels:data.map(d=>d.name),datasets:[{data:data.map(d=>d.val),backgroundColor:data.map(d=>d.col+'CC'),borderColor:data.map(d=>d.col),borderWidth:1.5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:10,boxWidth:12}}},scales:{r:{max:mMax(),ticks:{font:{size:10}}}}}});}
+function rDot(area,data){const DOTS=actMetric==='score'?20:14;const TMAX=actMetric==='score'?mps():14;let h='<div style="display:flex;flex-direction:column;gap:14px;padding:4px 0">';data.forEach(d=>{let ds='';for(let i=0;i<DOTS;i++){const f=actMetric==='score'?i<Math.round(d.val/TMAX*DOTS):i<d.val;ds+=`<div style="width:17px;height:17px;border-radius:50%;background:${f?d.col:'transparent'};border:1.5px solid ${f?d.col:'var(--bd2)'}"></div>`;}h+=`<div style="display:flex;align-items:center;gap:12px"><div style="min-width:130px;font-size:12px;font-weight:500;color:var(--ink);text-align:right">${d.name}</div><div style="display:flex;gap:4px;flex-wrap:wrap">${ds}</div><div style="font-size:12px;color:var(--ink2);min-width:60px">${d.val}${actMetric==='roles'?'/14':''} (${Math.round(d.val/TMAX*100)}%)</div></div>`;});h+=`</div>${cleg()}`;area.innerHTML=h;}
+function rHeat(area,data){const ck=actMetric==='score'?'catS':'catC';const cmax=Object.fromEntries(CATS.map(cat=>[cat,Math.max(...data.map(d=>d[ck][cat]||0),1)]));let h=`<div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%"><thead><tr><th style="text-align:left;font-size:11px;color:var(--ink3);padding:6px 10px;border-bottom:0.5px solid var(--bd)">${T.auths}</th>`;CATS.forEach(cat=>{const c=CM[cat];h+=`<th style="text-align:center;font-size:11px;padding:6px 8px;font-weight:500;color:${c.t};border-bottom:0.5px solid var(--bd);white-space:nowrap">${T.catL[cat]}</th>`;});h+=`</tr></thead><tbody>`;data.forEach(d=>{h+=`<tr><td style="padding:8px 10px;font-size:12px;font-weight:500;color:var(--ink);white-space:nowrap;border-bottom:0.5px solid var(--bd)">${d.name}</td>`;CATS.forEach(cat=>{const c=CM[cat];const cnt=d[ck][cat]||0;const al=cnt>0?Math.round(cnt/cmax[cat]*200).toString(16).padStart(2,'0'):'00';h+=`<td style="text-align:center;padding:8px;border-bottom:0.5px solid var(--bd)"><div style="background:${cnt>0?c.bg+al:'transparent'};border-radius:6px;padding:6px 4px;min-width:34px;display:inline-block"><span style="font-size:13px;font-weight:500;color:${cnt>0?c.t:'var(--ink3)'}">${cnt}</span></div></td>`;});h+=`</tr>`;});h+='</tbody></table></div>';area.innerHTML=h;}
+function rStk(area,data){const h2=Math.max(180,data.length*52+100);area.innerHTML=`<div style="position:relative;width:100%;height:${h2}px"><canvas id="ch1"></canvas></div>`;const ck=actMetric==='score'?'catS':'catC';const ds=CATS.map(cat=>({label:T.catL[cat],data:data.map(d=>d[ck][cat]||0),backgroundColor:CM[cat].bar+'DD',borderColor:CM[cat].bar,borderWidth:0.5,borderRadius:2,borderSkipped:false}));chartIs.c=new Chart(document.getElementById('ch1'),{type:'bar',data:{labels:data.map(d=>d.name),datasets:ds},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:10,boxWidth:12}},tooltip:{mode:'index',intersect:false}},scales:{x:{stacked:true,max:mMax(),grid:{color:'rgba(128,128,128,.08)'}},y:{stacked:true,ticks:{font:{size:12}}}}}});}
+function rRdr(area,data){area.innerHTML=`<div style="position:relative;width:100%;max-width:480px;height:380px;margin:0 auto"><canvas id="ch1"></canvas></div>`;const ck=actMetric==='score'?'catS':'catC';const ds=data.map(d=>({label:d.name,data:CATS.map(cat=>d[ck][cat]||0),backgroundColor:d.col+'33',borderColor:d.col,borderWidth:2,pointBackgroundColor:d.col,pointRadius:4}));chartIs.c=new Chart(document.getElementById('ch1'),{type:'radar',data:{labels:CATS.map(c=>T.catL[c]),datasets:ds},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:10,boxWidth:12}}},scales:{r:{ticks:{font:{size:10},backdropColor:'transparent'},grid:{color:'rgba(128,128,128,.15)'},pointLabels:{font:{size:11}}}}}});}
+
+// ─── PNG EXPORT ───
+function expPNG(){
+  // Build PNG from the current results data — no external libs, works in sandboxed iframes
+  const sorted=getSorted();
+  const tot=authors.length;
+  if(!sorted.length)return;
+
+  const usedIds=new Set(authors.flatMap(a=>[...a.roles]));
+  const maxSc=Math.max(...sorted.map(a=>sc(a)),1);
+
+  // Layout constants
+  const AUTHOR_W=180, ROLE_W=30, EXTRA_W=70, PAD=12;
+  const ROW_H=32, HEAD_H=110, FOOT_H=36;
+  const totalW=AUTHOR_W + ROLES.length*ROLE_W + EXTRA_W*2 + PAD*2;
+  const totalH=HEAD_H + sorted.length*ROW_H + FOOT_H + PAD*2;
+
+  const cv=document.createElement('canvas');
+  cv.width=totalW*2; cv.height=totalH*2; // 2× for retina
+  const ctx=cv.getContext('2d');
+  ctx.scale(2,2);
+
+  // Background
+  ctx.fillStyle='#faf9f7'; ctx.fillRect(0,0,totalW,totalH);
+
+  // Category colours
+  const catBg={ideation:'#EEEDFE',data:'#E1F5EE',analysis:'#FAEEDA',management:'#FAECE7',governance:'#E6F1FB',output:'#EAF3DE'};
+  const catFg={ideation:'#3C3489',data:'#085041',analysis:'#633806',management:'#4A1B0C',governance:'#042C53',output:'#173404'};
+
+  // Helper: draw text clipped to rect
+  function drawText(text, x, y, w, opts={}){
+    ctx.save();
+    ctx.font=`${opts.bold?'bold ':''} ${opts.size||11}px Arial,sans-serif`;
+    ctx.fillStyle=opts.color||'#1a1916';
+    ctx.textBaseline='middle';
+    ctx.textAlign=opts.align||'left';
+    if(opts.clip){ctx.beginPath();ctx.rect(x,y-ROW_H/2,w,ROW_H);ctx.clip();}
+    ctx.fillText(text,x,y,w);
+    ctx.restore();
+  }
+
+  // Draw column headers (rotated role names)
+  ROLES.forEach((r,i)=>{
+    const cx=PAD+AUTHOR_W+i*ROLE_W+ROLE_W/2;
+    const c=CM[r.cat];
+    // Column header bg
+    ctx.fillStyle=c.bg;
+    ctx.fillRect(PAD+AUTHOR_W+i*ROLE_W, PAD, ROLE_W, HEAD_H);
+    // Rotated text
+    ctx.save();
+    ctx.translate(cx, PAD+HEAD_H-8);
+    ctx.rotate(-Math.PI/2);
+    ctx.font=`${FIXED.has(r.id)?'bold ':''}10px Arial,sans-serif`;
+    ctx.fillStyle=c.t;
+    ctx.textBaseline='middle';
+    ctx.textAlign='left';
+    ctx.fillText(T.rn[r.id-1], 0, 0, HEAD_H-16);
+    ctx.restore();
+    // Column bottom border
+    ctx.strokeStyle='#e0ddd8'; ctx.lineWidth=0.5;
+    ctx.beginPath(); ctx.moveTo(PAD+AUTHOR_W+i*ROLE_W,PAD+HEAD_H); ctx.lineTo(PAD+AUTHOR_W+(i+1)*ROLE_W,PAD+HEAD_H); ctx.stroke();
+  });
+
+  // Column headers for totals
+  const roleColX=PAD+AUTHOR_W+ROLES.length*ROLE_W;
+  const scoreColX=roleColX+EXTRA_W;
+  ctx.fillStyle='#f3f1ed';
+  ctx.fillRect(roleColX, PAD, EXTRA_W, HEAD_H);
+  ctx.fillRect(scoreColX, PAD, EXTRA_W, HEAD_H);
+  drawText(T.mRoles, roleColX+EXTRA_W/2, PAD+HEAD_H/2, EXTRA_W, {align:'center',bold:true,color:'#4a4844',size:10});
+  drawText(T.mScore, scoreColX+EXTRA_W/2, PAD+HEAD_H/2, EXTRA_W, {align:'center',bold:true,color:'#4a4844',size:10});
+
+  // Author header
+  ctx.fillStyle='#f3f1ed';
+  ctx.fillRect(PAD, PAD, AUTHOR_W, HEAD_H);
+  drawText(T.auths, PAD+8, PAD+HEAD_H/2, AUTHOR_W-16, {bold:true, color:'#8a8782', size:10});
+
+  // Rows
+  sorted.forEach((a,ri)=>{
+    const ry=PAD+HEAD_H+ri*ROW_H;
+    const pk2=pk(a.position,tot);
+    const rowBg=ri%2===0?'#f3f1ed':'#faf9f7';
+
+    // Author cell
+    ctx.fillStyle=a.corresponding?'#f0ebff':rowBg;
+    ctx.fillRect(PAD, ry, AUTHOR_W, ROW_H);
+    const posColors={first:'#1a5c47',last:'#7a4010',mid:'#5a5652'};
+    const initCircleColor=a.corresponding?'#5c3d99':posColors[pk2]||'#888';
+    // Avatar circle
+    ctx.fillStyle=initCircleColor+'33';
+    ctx.beginPath(); ctx.arc(PAD+14,ry+ROW_H/2,10,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle=initCircleColor;
+    ctx.font='bold 9px Arial,sans-serif'; ctx.textBaseline='middle'; ctx.textAlign='center';
+    ctx.fillText(ini(a.name), PAD+14, ry+ROW_H/2);
+    // Name
+    ctx.font='11px Arial,sans-serif'; ctx.textBaseline='middle'; ctx.textAlign='left';
+    ctx.fillStyle='#1a1916';
+    const nameText=a.name+(a.corresponding?' *':'');
+    ctx.fillText(nameText, PAD+28, ry+ROW_H/2, AUTHOR_W-36);
+
+    // Role cells
+    ROLES.forEach((r,i)=>{
+      const cx=PAD+AUTHOR_W+i*ROLE_W;
+      ctx.fillStyle=rowBg;
+      ctx.fillRect(cx, ry, ROLE_W, ROW_H);
+      if(a.roles.has(r.id)){
+        const c=CM[r.cat];
+        ctx.fillStyle=c.bg;
+        ctx.fillRect(cx+1, ry+1, ROLE_W-2, ROW_H-2);
+        // Checkmark
+        ctx.strokeStyle=c.t; ctx.lineWidth=1.5; ctx.lineCap='round'; ctx.lineJoin='round';
+        ctx.beginPath();
+        const mx=cx+ROLE_W/2, my=ry+ROW_H/2;
+        ctx.moveTo(mx-4,my); ctx.lineTo(mx-1,my+3); ctx.lineTo(mx+4,my-4);
+        ctx.stroke();
+      }
+      // Cell border
+      ctx.strokeStyle='#e8e5e0'; ctx.lineWidth=0.5;
+      ctx.strokeRect(cx, ry, ROLE_W, ROW_H);
+    });
+
+    // Role count cell
+    const sc2=sc(a);
+    const rPct=a.roles.size/Math.max(...sorted.map(x=>x.roles.size),1);
+    const sPct=sc2/maxSc;
+    ctx.fillStyle=rowBg; ctx.fillRect(roleColX, ry, EXTRA_W, ROW_H);
+    ctx.fillStyle=abc(a)+'44';
+    ctx.fillRect(roleColX+4, ry+ROW_H-8, (EXTRA_W-8)*rPct, 4);
+    ctx.fillStyle=abc(a);
+    ctx.fillRect(roleColX+4, ry+ROW_H-8, Math.max(2,(EXTRA_W-8)*rPct), 4);
+    ctx.font='bold 11px Arial,sans-serif'; ctx.textBaseline='middle'; ctx.textAlign='center';
+    ctx.fillStyle='#1a1916';
+    ctx.fillText(a.roles.size, roleColX+EXTRA_W/2, ry+ROW_H/2-3);
+
+    // Score cell
+    ctx.fillStyle=rowBg; ctx.fillRect(scoreColX, ry, EXTRA_W, ROW_H);
+    ctx.fillStyle='#3d358044';
+    ctx.fillRect(scoreColX+4, ry+ROW_H-8, (EXTRA_W-8)*sPct, 4);
+    ctx.fillStyle='#3d3580';
+    ctx.fillRect(scoreColX+4, ry+ROW_H-8, Math.max(2,(EXTRA_W-8)*sPct), 4);
+    ctx.font='bold 11px Arial,sans-serif'; ctx.textBaseline='middle'; ctx.textAlign='center';
+    ctx.fillStyle='#1a1916';
+    ctx.fillText(sc2, scoreColX+EXTRA_W/2, ry+ROW_H/2-3);
+
+    // Row border
+    ctx.strokeStyle='#e8e5e0'; ctx.lineWidth=0.5;
+    ctx.strokeRect(PAD, ry, totalW-PAD*2, ROW_H);
+  });
+
+  // Footer / caption
+  const fy=PAD+HEAD_H+sorted.length*ROW_H+8;
+  ctx.font='10px Arial,sans-serif'; ctx.textBaseline='top'; ctx.textAlign='left';
+  ctx.fillStyle='#8a8782';
+  ctx.fillText('CRediT Profiler · ' + new Date().toLocaleDateString(), PAD, fy);
+
+  // Outer border
+  ctx.strokeStyle='#ccc'; ctx.lineWidth=1;
+  ctx.strokeRect(PAD, PAD, totalW-PAD*2, totalH-PAD*2-FOOT_H+8);
+
+  // Download
+  cv.toBlob(blob=>{
+    if(!blob){showToast('Export failed — try a different browser.');return;}
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url; a.download='credit_matrix.png'; a.style.display='none';
+    document.body.appendChild(a); a.click();
+    setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},400);
+    showToast(lang==='es'?'PNG descargado ✓':lang==='zh'?'PNG 已下载 ✓':lang==='pt'?'PNG descarregado ✓':lang==='fr'?'PNG téléchargé ✓':lang==='ar'?'تم تنزيل PNG ✓':'Matrix PNG downloaded ✓');
+  },'image/png');
+}
+
+// ─── STATEMENT (no corresponding mention) ───
+function switchStmt(v){
+  const full=document.getElementById('stmt-full');
+  const init=document.getElementById('stmt-init');
+  const tabF=document.getElementById('stmt-tab-full');
+  const tabI=document.getElementById('stmt-tab-init');
+  const btn=document.getElementById('cst');
+  if(!full||!init)return;
+  if(v==='full'){
+    full.style.display='';init.style.display='none';
+    tabF&&tabF.classList.add('on');tabI&&tabI.classList.remove('on');
+    if(btn)btn.onclick=()=>copyT('cst',ea(full.innerText||full.textContent));
+  }else{
+    full.style.display='none';init.style.display='';
+    tabI&&tabI.classList.add('on');tabF&&tabF.classList.remove('on');
+    if(btn)btn.onclick=()=>copyT('cst',ea(init.innerText||init.textContent));
+  }
+}
+function buildStmt(sorted){
+  return sorted.map(a=>`${a.name}: ${[...a.roles].sort((x,y)=>x-y).map(rid=>T.rn[rid-1]).join(', ')}.`).join('\n');
+}
+function buildStmtInitials(sorted){
+  return sorted.map(a=>{
+    const parts=a.name.trim().split(/\s+/);
+    const initials=parts.map(w=>w[0]?w[0].toUpperCase()+'.':'').join(' ');
+    return`${initials} ${[...a.roles].sort((x,y)=>x-y).map(rid=>T.rn[rid-1]).join(', ')}.`;
+  }).join('\n');
+}
+
+// ─── JATS ───
+function buildJATS(sorted){
+  const title=document.getElementById('art-title')?.value||'';
+  let x=`<contrib-group>\n  <!-- CRediT JATS 1.2 · https://credit.niso.org/ -->\n`;
+  if(title)x+=`  <!-- ${title} -->\n`;
+  sorted.forEach(a=>{
+    x+=`  <contrib${a.corresponding?' corresp="yes"':''}>\n`;
+    const pts=a.name.trim().split(/\s+/);const sn=pts[pts.length-1];const gn=pts.slice(0,-1).join(' ');
+    x+=`    <string-name>\n${gn?`      <given-names>${gn}</given-names>\n`:''}      <surname>${sn}</surname>\n    </string-name>\n`;
+    [...a.roles].sort((p,q)=>p-q).forEach(rid=>{const r=ROLES.find(ro=>ro.id===rid);x+=`    <role vocab="credit"\n          vocab-identifier="https://credit.niso.org/"\n          vocab-term="${r.jt}"\n          vocab-term-identifier="https://credit.niso.org/contributor-roles/${r.uri}/">\n      ${r.jt}\n    </role>\n`;});
+    x+=`  </contrib>\n`;
+  });
+  x+=`</contrib-group>`;return x;
+}
+function copyT(btnId,raw){const clean=raw.replace(/\\n/g,'\n').replace(/\\'/g,"'").replace(/\\\\/g,'\\');navigator.clipboard.writeText(clean).then(()=>{const b=document.getElementById(btnId);if(b){b.textContent=T.copied;setTimeout(()=>{b.textContent=T.copyBtn;},2000);}});}
+
+// ─── PREVIEW ───
+function showPreview(){
+  if(!authors.length)return;
+  const sorted=getSorted();const tot=authors.length;
+  const pa=document.getElementById('prov-art');
+  if(pa)pa.textContent=[document.getElementById('art-title')?.value,document.getElementById('art-journal')?.value,document.getElementById('art-doi')?.value].filter(Boolean).join(' · ');
+  const stmt=buildStmt(sorted);const jats=buildJATS(sorted);
+  const maxSc=Math.max(...authors.map(a=>sc(a)),1);
+  let body=`<div style="margin-bottom:24px"><div style="font-size:10px;font-weight:500;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">${T.secSt}</div><div style="font-size:14px;color:var(--ink2);line-height:1.9;font-style:italic">${stmt.replace(/\n/g,'<br>')}</div></div>`;
+  body+=`<div style="margin-bottom:24px"><div style="font-size:10px;font-weight:500;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">${T.secSc}</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;">`;
+  [...authors].sort((a,b)=>sc(b)-sc(a)).forEach((a,i)=>{const sv=sc(a);const pct=Math.round(sv/maxSc*100);const c=wc(Math.round(sv/maxSc*10));body+=`<div style="background:var(--bg2);border-radius:8px;padding:12px 14px"><div style="font-size:11px;color:var(--ink3);margin-bottom:3px">#${i+1} · ${a.name}</div><div style="font-size:22px;font-weight:300;font-family:'DM Serif Display',serif;color:var(--ink);line-height:1">${sv}</div><div style="margin-top:6px;height:4px;background:var(--bd2);border-radius:2px;overflow:hidden"><div style="width:${pct}%;height:100%;background:${c.b};border-radius:2px"></div></div></div>`;});
+  body+=`</div></div>`;
+  body+=`<div><div style="font-size:10px;font-weight:500;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">${T.secJATS}</div><pre style="background:var(--bg2);border:0.5px solid var(--bd2);border-radius:8px;padding:14px 16px;font-size:11px;font-family:'DM Mono',monospace;color:var(--ink2);line-height:1.7;overflow-x:auto;white-space:pre">${eh(jats)}</pre></div>`;
+  const pb2=document.getElementById('prev-body');if(pb2)pb2.innerHTML=body;
+  document.getElementById('prov').classList.add('show');
+}
+function hidePreview(){document.getElementById('prov').classList.remove('show');}
+
+// ─── EXPORT ───
+function exportJSON(){
+  const data={version:7,app:'CRediT Profiler',lang,W,art:{t:document.getElementById('art-title')?.value||'',d:document.getElementById('art-doi')?.value||'',j:document.getElementById('art-journal')?.value||''},authors:authors.map(a=>({...a,roles:[...a.roles],editing:undefined}))};
+  dlFile(JSON.stringify(data,null,2),'credit_profiler.json','application/json');
+}
+function exportCSV(){
+  const sorted=[...authors].sort((a,b)=>a.position-b.position);
+  const header=['Position','Author','Corresponding',...ROLES.map(r=>T.rn[r.id-1]),'Total roles','Score'];
+  const rows=sorted.map(a=>[a.position,a.name,a.corresponding?'Yes':'No',...ROLES.map(r=>a.roles.has(r.id)?'1':'0'),a.roles.size,sc(a)]);
+  const csv=[header,...rows].map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  dlFile(csv,'credit_profiler.csv','text/csv;charset=utf-8;');
+}
+
+// ─── INIT ───
+applyI18N();buildFR();renderGrid();renderWP();renderAuthors();renderHistory();loadFromURL();
+</script>
+</body>
+</html>
